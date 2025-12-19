@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端知识库 - Front Knowledge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .glow {
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .category-badge {
+            transition: all 0.2s ease;
+        }
+
+        .category-badge:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .hero-pattern {
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.08) 0%, transparent 50%);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800">
+        <div class="max-w-6xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <span class="text-xl">📚</span>
+                    </div>
+                    <span class="text-xl font-bold">Front Knowledge</span>
+                </a>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="#categories" class="text-slate-300 hover:text-white transition-colors">知识分类</a>
+                    <a href="#articles" class="text-slate-300 hover:text-white transition-colors">全部文章</a>
+                    <a href="https://github.com/Davied-H/front-knowledge" target="_blank"
+                       class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-pattern pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-8">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                <span class="text-sm text-indigo-300">持续更新中</span>
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                <span class="text-gradient">前端知识库</span>
+            </h1>
+
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                深入理解前端开发中的核心概念和最佳实践<br>
+                从问题出发，掌握解决方案
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#articles" class="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold hover:opacity-90 transition-opacity">
+                    开始学习
+                </a>
+                <a href="https://github.com/Davied-H/front-knowledge" target="_blank"
+                   class="px-8 py-3 rounded-xl bg-slate-800 border border-slate-700 font-semibold hover:bg-slate-700 transition-colors">
+                    查看源码
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="flex justify-center gap-12 mt-16">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">2+</div>
+                    <div class="text-sm text-slate-400 mt-1">知识专题</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">NPM</div>
+                    <div class="text-sm text-slate-400 mt-1">核心主题</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">深度</div>
+                    <div class="text-sm text-slate-400 mt-1">原理解析</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section id="categories" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">知识分类</h2>
+                <p class="text-slate-400">按主题浏览前端知识</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button class="category-badge px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 font-medium">
+                    📦 NPM & 包管理
+                </button>
+                <button class="category-badge px-6 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 font-medium hover:border-slate-600">
+                    ⚡ 性能优化
+                </button>
+                <button class="category-badge px-6 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 font-medium hover:border-slate-600">
+                    🔧 工程化
+                </button>
+                <button class="category-badge px-6 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 font-medium hover:border-slate-600">
+                    🎨 CSS & 样式
+                </button>
+                <button class="category-badge px-6 py-3 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 font-medium hover:border-slate-600">
+                    📱 响应式设计
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Articles Grid -->
+    <section id="articles" class="py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">知识专题</h2>
+                <p class="text-slate-400">深入学习每个主题</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Card 1: Phantom Dependencies -->
+                <a href="phantom-deps.html" class="card-hover block p-6 rounded-2xl bg-slate-800/50 border border-slate-700 glow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">👻</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30">NPM</span>
+                                <span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-300 border border-red-500/30">重要</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">NPM 幽灵依赖详解</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                                深入理解什么是幽灵依赖，为什么它是危险的，以及如何使用 pnpm 等工具来避免这个问题。
+                            </p>
+                            <div class="flex items-center gap-4 text-sm text-slate-500">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    4 个章节
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    10 分钟阅读
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-slate-400">学习要点：</span>
+                            <span class="text-xs text-slate-500">扁平化安装 · 版本冲突 · pnpm</span>
+                        </div>
+                        <span class="text-indigo-400 font-medium text-sm flex items-center gap-1">
+                            开始学习
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+
+                <!-- Card 2: Package Lock -->
+                <a href="why-package-lock.html" class="card-hover block p-6 rounded-2xl bg-slate-800/50 border border-slate-700 glow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl">🔒</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-1 rounded text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30">NPM</span>
+                                <span class="px-2 py-1 rounded text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30">基础</span>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">为什么需要 package-lock.json</h3>
+                            <p class="text-slate-400 text-sm leading-relaxed mb-4">
+                                通过真实场景理解 lock 文件的重要性，学习版本号语义化规范，避免团队协作中的依赖问题。
+                            </p>
+                            <div class="flex items-center gap-4 text-sm text-slate-500">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    6 个章节
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    15 分钟阅读
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-slate-400">学习要点：</span>
+                            <span class="text-xs text-slate-500">语义化版本 · 团队协作 · CI/CD</span>
+                        </div>
+                        <span class="text-indigo-400 font-medium text-sm flex items-center gap-1">
+                            开始学习
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Coming Soon -->
+            <div class="mt-8 p-6 rounded-2xl bg-slate-800/30 border border-dashed border-slate-700 text-center">
+                <div class="text-4xl mb-4">🚀</div>
+                <h3 class="text-lg font-semibold mb-2">更多内容即将推出</h3>
+                <p class="text-slate-400 text-sm">
+                    我们正在准备更多优质的前端知识内容，敬请期待！
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Path -->
+    <section class="py-16 px-6 bg-slate-900/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4">推荐学习路径</h2>
+                <p class="text-slate-400">按顺序学习，循序渐进</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+                <a href="why-package-lock.html" class="flex items-center gap-3 px-6 py-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition-colors">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold">1</div>
+                    <div>
+                        <div class="font-semibold">package-lock.json</div>
+                        <div class="text-sm text-slate-400">理解依赖锁定</div>
+                    </div>
+                </a>
+
+                <svg class="w-8 h-8 text-slate-600 rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+
+                <a href="phantom-deps.html" class="flex items-center gap-3 px-6 py-4 rounded-xl bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition-colors">
+                    <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center font-bold">2</div>
+                    <div>
+                        <div class="font-semibold">幽灵依赖</div>
+                        <div class="text-sm text-slate-400">深入理解问题</div>
+                    </div>
+                </a>
+
+                <svg class="w-8 h-8 text-slate-600 rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+
+                <div class="flex items-center gap-3 px-6 py-4 rounded-xl bg-slate-800/50 border border-dashed border-slate-700">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-slate-400">3</div>
+                    <div>
+                        <div class="font-semibold text-slate-400">更多内容</div>
+                        <div class="text-sm text-slate-500">敬请期待</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-slate-800">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <span class="text-xl">📚</span>
+                    </div>
+                    <div>
+                        <div class="font-bold">Front Knowledge</div>
+                        <div class="text-sm text-slate-400">前端知识库</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-6 text-sm text-slate-400">
+                    <a href="https://github.com/Davied-H/front-knowledge" target="_blank" class="hover:text-white transition-colors">
+                        GitHub
+                    </a>
+                    <span>Made with ❤️</span>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-slate-800 text-center text-sm text-slate-500">
+                © 2024 Front Knowledge. 用心分享前端知识。
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
