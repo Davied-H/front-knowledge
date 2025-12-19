@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Prompt 类型详解 - System / User / Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { background-color: #2563eb; color: white; }
+
+    .message-box {
+      border-left: 4px solid;
+      padding: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    .system-msg { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+    .user-msg { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+    .assistant-msg { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+
+    .code-block {
+      background: #1e293b;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-8">
+  <div id="capture">
+  <h1 class="text-3xl font-bold text-center mb-2">LLM Prompt 类型详解</h1>
+  <p class="text-slate-400 text-center mb-8">System Prompt / User Prompt / Assistant Prompt</p>
+
+  <!-- Tab Navigation -->
+  <div class="flex justify-center gap-2 mb-8 flex-wrap">
+    <button class="tab-btn active px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="overview">Overview</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="system">System Prompt</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="user">User Prompt</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="assistant">Assistant Prompt</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="practice">Best Practices</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="overview" class="tab-content active max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-amber-400">什么是 Prompt？</h2>
+      <p class="text-slate-300 mb-4">
+        Prompt（提示词）是与大语言模型（LLM）交互的核心方式。一个完整的对话由三种类型的消息组成：
+      </p>
+      <div class="grid md:grid-cols-3 gap-4 mt-6">
+        <div class="bg-purple-500/20 border border-purple-500/50 rounded-lg p-4 text-center">
+          <div class="text-3xl mb-2">System</div>
+          <div class="text-sm text-purple-300">系统级指令</div>
+        </div>
+        <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 text-center">
+          <div class="text-3xl mb-2">User</div>
+          <div class="text-sm text-blue-300">用户输入</div>
+        </div>
+        <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4 text-center">
+          <div class="text-3xl mb-2">Assistant</div>
+          <div class="text-sm text-green-300">AI 回复</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conversation Flow -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-6 text-center">对话流程示意图</h3>
+
+      <div class="space-y-4">
+        <!-- System -->
+        <div class="message-box system-msg rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-purple-600 px-2 py-1 rounded text-xs font-bold">SYSTEM</span>
+            <span class="text-purple-300 text-sm">对用户不可见</span>
+          </div>
+          <p class="text-sm text-slate-300">你是一个专业的前端开发助手，擅长 React 和 TypeScript...</p>
+        </div>
+
+        <div class="flow-arrow">v</div>
+
+        <!-- User -->
+        <div class="message-box user-msg rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-blue-600 px-2 py-1 rounded text-xs font-bold">USER</span>
+            <span class="text-blue-300 text-sm">用户发送的消息</span>
+          </div>
+          <p class="text-sm text-slate-300">如何在 React 中实现一个自定义 Hook？</p>
+        </div>
+
+        <div class="flow-arrow">v</div>
+
+        <!-- Assistant -->
+        <div class="message-box assistant-msg rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-green-600 px-2 py-1 rounded text-xs font-bold">ASSISTANT</span>
+            <span class="text-green-300 text-sm">AI 生成的回复</span>
+          </div>
+          <p class="text-sm text-slate-300">自定义 Hook 是以 "use" 开头的函数，让你可以复用状态逻辑...</p>
+        </div>
+      </div>
+
+      <div class="mt-6 bg-amber-500/20 border border-amber-500/50 rounded-lg p-4">
+        <p class="text-amber-300 text-sm">
+          <strong>重要：</strong>这三种消息角色共同构成了 LLM 的上下文，模型会综合考虑所有信息来生成回复。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Prompt Tab -->
+  <div id="system" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="bg-purple-600 px-3 py-1 rounded-lg font-bold">SYSTEM</span>
+        <h2 class="text-xl font-semibold text-purple-400">系统提示词</h2>
+      </div>
+
+      <p class="text-slate-300 mb-4">
+        System Prompt 是给 AI 设定的"人设"和"规则"，它定义了 AI 的行为方式、专业领域、回复风格等。
+        <span class="text-purple-300 font-semibold">用户通常看不到这部分内容。</span>
+      </p>
+
+      <div class="grid gap-4">
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="text-purple-300 font-semibold mb-2">核心作用</h4>
+          <ul class="text-sm text-slate-300 space-y-2">
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400">1.</span>
+              <span><strong>角色定义</strong> - 定义 AI 扮演什么角色（如：前端专家、翻译官）</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400">2.</span>
+              <span><strong>行为约束</strong> - 设定回复规则（如：不讨论政治、始终用中文）</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400">3.</span>
+              <span><strong>输出格式</strong> - 指定回复格式（如：JSON、Markdown、代码）</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400">4.</span>
+              <span><strong>知识注入</strong> - 提供专业知识或上下文信息</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Examples -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">System Prompt 示例</h3>
+
+      <div class="space-y-4">
+        <div class="code-block">
+          <div class="text-purple-400 text-xs mb-2"># 示例 1：前端开发助手</div>
+          <pre class="text-sm text-green-300 whitespace-pre-wrap">你是一个资深的前端开发专家，精通以下技术栈：
+- React、Vue、Angular
+- TypeScript
+- Node.js
+- CSS/Tailwind
+
+回答要求：
+1. 代码示例使用 TypeScript
+2. 优先推荐最佳实践
+3. 解释要简洁清晰
+4. 如果不确定，请诚实说明</pre>
+        </div>
+
+        <div class="code-block">
+          <div class="text-purple-400 text-xs mb-2"># 示例 2：JSON 输出格式化</div>
+          <pre class="text-sm text-green-300 whitespace-pre-wrap">你是一个数据提取助手。
+用户会给你一段文本，你需要提取其中的关键信息。
+
+输出要求：
+- 必须返回有效的 JSON 格式
+- 不要添加任何额外解释
+- 格式：{"name": "", "date": "", "summary": ""}</pre>
+        </div>
+
+        <div class="code-block">
+          <div class="text-purple-400 text-xs mb-2"># 示例 3：翻译助手</div>
+          <pre class="text-sm text-green-300 whitespace-pre-wrap">你是一个专业的中英互译翻译官。
+
+规则：
+- 中文输入 -> 翻译成英文
+- 英文输入 -> 翻译成中文
+- 保持原文的语气和风格
+- 专业术语要准确</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Prompt Tab -->
+  <div id="user" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="bg-blue-600 px-3 py-1 rounded-lg font-bold">USER</span>
+        <h2 class="text-xl font-semibold text-blue-400">用户提示词</h2>
+      </div>
+
+      <p class="text-slate-300 mb-4">
+        User Prompt 是用户实际发送给 AI 的消息，是最常见的交互方式。
+        这就是你在 ChatGPT、Claude 等工具中输入框里写的内容。
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+          <h4 class="text-blue-300 font-semibold mb-2">特点</h4>
+          <ul class="text-sm text-slate-300 space-y-1">
+            <li>- 用户可见且可编辑</li>
+            <li>- 每次对话可以有多条</li>
+            <li>- 构成对话的主要内容</li>
+            <li>- 触发 AI 生成回复</li>
+          </ul>
+        </div>
+        <div class="bg-slate-700/50 rounded-lg p-4">
+          <h4 class="text-slate-300 font-semibold mb-2">包含内容</h4>
+          <ul class="text-sm text-slate-300 space-y-1">
+            <li>- 问题和查询</li>
+            <li>- 任务指令</li>
+            <li>- 需要处理的数据</li>
+            <li>- 上下文补充信息</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Prompt Examples -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">User Prompt 示例</h3>
+
+      <div class="space-y-4">
+        <div class="message-box user-msg rounded-lg">
+          <div class="text-blue-400 text-xs mb-2"># 简单问题</div>
+          <p class="text-slate-300">React 中 useEffect 和 useLayoutEffect 有什么区别？</p>
+        </div>
+
+        <div class="message-box user-msg rounded-lg">
+          <div class="text-blue-400 text-xs mb-2"># 带代码的问题</div>
+          <p class="text-slate-300 whitespace-pre-wrap">这段代码为什么会报错？
+
+```javascript
+const [count, setCount] = useState(0);
+useEffect(() => {
+  setCount(count + 1);
+}, []);
+```</p>
+        </div>
+
+        <div class="message-box user-msg rounded-lg">
+          <div class="text-blue-400 text-xs mb-2"># 任务指令</div>
+          <p class="text-slate-300">帮我写一个 React Hook，用于检测用户是否在页面上处于活跃状态。要求：
+1. 使用 TypeScript
+2. 支持自定义超时时间
+3. 返回 isActive 状态</p>
+        </div>
+
+        <div class="message-box user-msg rounded-lg">
+          <div class="text-blue-400 text-xs mb-2"># 带上下文的请求</div>
+          <p class="text-slate-300">我正在开发一个电商网站，使用 Next.js 14 + App Router。现在需要实现购物车功能，要考虑：
+- 未登录用户的本地存储
+- 登录用户的数据同步
+- SSR 兼容性
+
+请给我一个技术方案。</p>
+        </div>
+      </div>
+
+      <div class="mt-6 bg-blue-500/20 border border-blue-500/50 rounded-lg p-4">
+        <p class="text-blue-300 text-sm">
+          <strong>提示：</strong>好的 User Prompt 应该清晰、具体，包含足够的上下文信息，让 AI 能准确理解你的需求。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assistant Prompt Tab -->
+  <div id="assistant" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="bg-green-600 px-3 py-1 rounded-lg font-bold">ASSISTANT</span>
+        <h2 class="text-xl font-semibold text-green-400">助手消息</h2>
+      </div>
+
+      <p class="text-slate-300 mb-4">
+        Assistant 消息是 AI 生成的回复。但在 API 调用中，开发者也可以
+        <span class="text-green-300 font-semibold">预设 Assistant 消息</span>
+        来引导对话方向或提供少样本示例（Few-shot Learning）。
+      </p>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+          <h4 class="text-green-300 font-semibold mb-2">自然生成</h4>
+          <p class="text-sm text-slate-300">AI 根据 System + User 消息自动生成的回复</p>
+        </div>
+        <div class="bg-amber-500/20 border border-amber-500/50 rounded-lg p-4">
+          <h4 class="text-amber-300 font-semibold mb-2">预设内容</h4>
+          <p class="text-sm text-slate-300">开发者手动添加的历史回复，用于引导模型行为</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Few-shot Example -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">Few-shot Learning 示例</h3>
+      <p class="text-slate-400 text-sm mb-4">通过预设 User-Assistant 对话对，教会模型特定的回复模式：</p>
+
+      <div class="code-block">
+        <pre class="text-sm whitespace-pre-wrap"><span class="text-purple-400">// API 调用示例</span>
+{
+  "messages": [
+    {
+      <span class="text-purple-300">"role": "system"</span>,
+      "content": "将用户输入的情感分类为：积极/消极/中立"
+    },
+    {
+      <span class="text-blue-300">"role": "user"</span>,
+      "content": "这个产品太棒了，超出预期！"
+    },
+    {
+      <span class="text-green-300">"role": "assistant"</span>,
+      "content": "积极"
+    },
+    {
+      <span class="text-blue-300">"role": "user"</span>,
+      "content": "包装破损，物流太慢了"
+    },
+    {
+      <span class="text-green-300">"role": "assistant"</span>,
+      "content": "消极"
+    },
+    {
+      <span class="text-blue-300">"role": "user"</span>,
+      "content": "还行吧，没什么特别的"  <span class="text-slate-500">// 真正要分类的输入</span>
+    }
+  ]
+}</pre>
+      </div>
+
+      <div class="mt-4 bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+        <p class="text-green-300 text-sm">
+          <strong>结果：</strong>模型会学习前面的 User-Assistant 配对模式，对最后一条消息回复 "中立"
+        </p>
+      </div>
+    </div>
+
+    <!-- Prefill Example -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">Prefill 技巧</h3>
+      <p class="text-slate-400 text-sm mb-4">预填充 Assistant 开头，强制模型按特定格式回复：</p>
+
+      <div class="code-block">
+        <pre class="text-sm whitespace-pre-wrap">{
+  "messages": [
+    {
+      <span class="text-purple-300">"role": "system"</span>,
+      "content": "你是一个 JSON 生成器"
+    },
+    {
+      <span class="text-blue-300">"role": "user"</span>,
+      "content": "生成一个用户信息"
+    },
+    {
+      <span class="text-green-300">"role": "assistant"</span>,
+      "content": "{"  <span class="text-slate-500">// 预填充 JSON 开头，强制输出 JSON</span>
+    }
+  ]
+}</pre>
+      </div>
+
+      <div class="mt-4 text-sm text-slate-400">
+        这样模型会从 <code class="bg-slate-700 px-1 rounded">{</code> 继续生成，确保输出是有效的 JSON。
+      </div>
+    </div>
+  </div>
+
+  <!-- Best Practices Tab -->
+  <div id="practice" class="tab-content max-w-4xl mx-auto">
+    <div class="grid gap-6">
+      <!-- Comparison Table -->
+      <div class="bg-slate-800 rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4 text-center">三种 Prompt 对比</h3>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="text-left p-3 text-slate-400">特性</th>
+                <th class="p-3 text-purple-400">System</th>
+                <th class="p-3 text-blue-400">User</th>
+                <th class="p-3 text-green-400">Assistant</th>
+              </tr>
+            </thead>
+            <tbody class="text-slate-300">
+              <tr class="border-b border-slate-700/50">
+                <td class="p-3 font-medium">用户可见性</td>
+                <td class="p-3 text-center">通常隐藏</td>
+                <td class="p-3 text-center">可见</td>
+                <td class="p-3 text-center">可见</td>
+              </tr>
+              <tr class="border-b border-slate-700/50">
+                <td class="p-3 font-medium">数量限制</td>
+                <td class="p-3 text-center">通常 1 条</td>
+                <td class="p-3 text-center">多条</td>
+                <td class="p-3 text-center">多条</td>
+              </tr>
+              <tr class="border-b border-slate-700/50">
+                <td class="p-3 font-medium">主要用途</td>
+                <td class="p-3 text-center">设定规则</td>
+                <td class="p-3 text-center">提问/指令</td>
+                <td class="p-3 text-center">回复/示例</td>
+              </tr>
+              <tr class="border-b border-slate-700/50">
+                <td class="p-3 font-medium">谁来写</td>
+                <td class="p-3 text-center">开发者</td>
+                <td class="p-3 text-center">用户/开发者</td>
+                <td class="p-3 text-center">AI/开发者</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-medium">优先级权重</td>
+                <td class="p-3 text-center">最高</td>
+                <td class="p-3 text-center">高</td>
+                <td class="p-3 text-center">中</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Best Practices -->
+      <div class="bg-slate-800 rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4">最佳实践</h3>
+
+        <div class="space-y-4">
+          <div class="flex gap-4 items-start">
+            <span class="bg-purple-600 w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
+            <div>
+              <h4 class="font-semibold text-purple-300">System Prompt 要具体明确</h4>
+              <p class="text-sm text-slate-400 mt-1">不要只写"你是一个助手"，要详细说明角色、能力范围、回复格式、限制条件等。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start">
+            <span class="bg-blue-600 w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
+            <div>
+              <h4 class="font-semibold text-blue-300">User Prompt 提供足够上下文</h4>
+              <p class="text-sm text-slate-400 mt-1">告诉 AI 你的背景、目标、约束条件，信息越完整，回复越准确。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start">
+            <span class="bg-green-600 w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
+            <div>
+              <h4 class="font-semibold text-green-300">善用 Few-shot 示例</h4>
+              <p class="text-sm text-slate-400 mt-1">对于特定格式或风格的输出，提供 2-3 个 User-Assistant 示例对效果显著。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start">
+            <span class="bg-amber-600 w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">4</span>
+            <div>
+              <h4 class="font-semibold text-amber-300">控制对话长度</h4>
+              <p class="text-sm text-slate-400 mt-1">过长的历史消息会影响模型注意力，必要时进行总结或截断。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Example -->
+      <div class="bg-slate-800 rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4">完整 API 调用示例</h3>
+
+        <div class="code-block">
+          <pre class="text-sm whitespace-pre-wrap"><span class="text-slate-500">// OpenAI / Claude API 调用格式</span>
+const response = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [
+    {
+      role: <span class="text-purple-400">"system"</span>,
+      content: `你是一个代码审查专家。
+请对用户提交的代码进行审查，指出：
+1. 潜在的 bug
+2. 性能问题
+3. 可读性改进建议
+
+使用中文回复，格式使用 Markdown。`
+    },
+    {
+      role: <span class="text-blue-400">"user"</span>,
+      content: `请审查这段代码：
+\`\`\`javascript
+function getData() {
+  let result = [];
+  for (var i = 0; i < 1000; i++) {
+    result.push(fetchData(i));
+  }
+  return result;
+}
+\`\`\``
+    }
+  ]
+});</pre>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="bg-gradient-to-r from-purple-600/30 via-blue-600/30 to-green-600/30 rounded-xl p-6 text-center">
+        <p class="text-lg">
+          记住：<strong class="text-purple-300">System</strong> 设定规则，
+          <strong class="text-blue-300">User</strong> 提出需求，
+          <strong class="text-green-300">Assistant</strong> 给出回复
+        </p>
+        <p class="text-slate-400 text-sm mt-2">三者协同工作，构成完整的 LLM 对话</p>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- End capture div -->
+
+  <!-- Download Buttons -->
+  <div class="flex justify-center gap-4 mt-8 mb-4 flex-wrap">
+    <button onclick="downloadCurrentTab()" class="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all flex items-center gap-2">
+      Download Current Tab
+    </button>
+    <button onclick="downloadAllTabs()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all flex items-center gap-2">
+      Download All Tabs
+    </button>
+  </div>
+
+  <!-- Back to Home -->
+  <div class="text-center mt-4">
+    <a href="index.html" class="text-slate-400 hover:text-white transition-colors">
+      <- Back to Home
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center mt-12 text-slate-500 text-sm">
+    Made with love for LLM Developers
+  </div>
+
+  <script>
+    const tabNames = {
+      'overview': '概览',
+      'system': 'System Prompt',
+      'user': 'User Prompt',
+      'assistant': 'Assistant Prompt',
+      'practice': '最佳实践'
+    };
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function getCurrentTab() {
+      const activeBtn = document.querySelector('.tab-btn.active');
+      return activeBtn ? activeBtn.dataset.tab : 'overview';
+    }
+
+    async function downloadCurrentTab() {
+      const currentTab = getCurrentTab();
+      const capture = document.getElementById('capture');
+
+      try {
+        const canvas = await html2canvas(capture, {
+          backgroundColor: '#0f172a',
+          scale: 2,
+          useCORS: true
+        });
+
+        const link = document.createElement('a');
+        link.download = `LLM-Prompt-${tabNames[currentTab]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('Download failed: ' + err.message);
+      }
+    }
+
+    async function downloadAllTabs() {
+      const tabs = ['overview', 'system', 'user', 'assistant', 'practice'];
+      const capture = document.getElementById('capture');
+
+      for (const tab of tabs) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tab).classList.add('active');
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+        await new Promise(r => setTimeout(r, 100));
+
+        try {
+          const canvas = await html2canvas(capture, {
+            backgroundColor: '#0f172a',
+            scale: 2,
+            useCORS: true
+          });
+
+          const link = document.createElement('a');
+          link.download = `LLM-Prompt-${tabs.indexOf(tab) + 1}-${tabNames[tab]}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          await new Promise(r => setTimeout(r, 300));
+        } catch (err) {
+          console.error('Download failed:', err);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
