@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LSP 与 Claude Code - 让 AI 编程助手更智能</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-btn.active { background-color: #2563eb; color: white; }
+
+    .message-box {
+      border-left: 4px solid;
+      padding: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    .lsp-msg { border-color: #06b6d4; background: rgba(6, 182, 212, 0.1); }
+    .claude-msg { border-color: #f97316; background: rgba(249, 115, 22, 0.1); }
+    .result-msg { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+
+    .flow-arrow {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+    }
+
+    .code-block {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+    }
+
+    .gradient-card {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(249, 115, 22, 0.1));
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-8">
+  <div id="capture">
+  <h1 class="text-3xl font-bold text-center mb-2">LSP 与 Claude Code</h1>
+  <p class="text-slate-400 text-center mb-8">让 AI 编程助手拥有 IDE 级别的代码理解能力</p>
+
+  <!-- Tab Navigation -->
+  <div class="flex justify-center gap-2 mb-8 flex-wrap">
+    <button class="tab-btn active px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="overview">什么是 LSP</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="how-it-works">工作原理</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="claude-code">Claude Code 支持</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="impact">重大影响</button>
+    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="usage">如何使用</button>
+  </div>
+
+  <!-- Overview Tab -->
+  <div id="overview" class="tab-content active max-w-4xl mx-auto">
+    <!-- What is LSP -->
+    <div class="gradient-card rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-center">Language Server Protocol (语言服务器协议)</h2>
+
+      <div class="bg-slate-800 rounded-lg p-4 mb-4">
+        <p class="text-slate-300 leading-relaxed">
+          <strong class="text-cyan-400">LSP</strong> 是由微软创建的一种开放标准协议，用于在代码编辑器/IDE 与语言分析服务器之间进行通信。
+        </p>
+        <p class="text-slate-400 text-sm mt-2">
+          简单来说：它让不同的编辑器都能获得<strong class="text-amber-300">相同的智能代码功能</strong>，比如自动补全、跳转定义、查找引用等。
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6 mt-6">
+        <div class="text-center">
+          <div class="text-5xl mb-3">📝</div>
+          <div class="text-cyan-300 font-bold text-lg mb-2">编辑器/客户端</div>
+          <p class="text-xs text-slate-500">VS Code、Vim、Emacs...<br>负责显示代码和用户交互</p>
+        </div>
+        <div class="text-center">
+          <div class="text-5xl mb-3">🔌</div>
+          <div class="text-amber-300 font-bold text-lg mb-2">LSP 协议</div>
+          <p class="text-xs text-slate-500">JSON-RPC 通信<br>标准化的消息格式</p>
+        </div>
+        <div class="text-center">
+          <div class="text-5xl mb-3">🧠</div>
+          <div class="text-green-300 font-bold text-lg mb-2">语言服务器</div>
+          <p class="text-xs text-slate-500">分析代码、提供智能提示<br>每种语言一个服务器</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Problem LSP Solves -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-amber-400">LSP 解决了什么问题？</h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Before LSP -->
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="text-red-400 font-semibold mb-3 flex items-center gap-2">
+            <span>❌</span> 没有 LSP 之前
+          </div>
+          <div class="space-y-2 text-sm text-slate-300">
+            <p>假设有 <strong>M 个编辑器</strong>（VS Code、Vim、Emacs...）</p>
+            <p>和 <strong>N 种语言</strong>（Python、TypeScript、Rust...）</p>
+            <p class="text-red-300 font-semibold mt-3">需要开发 M × N 个插件！</p>
+            <div class="bg-slate-900 rounded-lg p-3 mt-3 text-xs">
+              <div>VS Code + Python = 1 个插件</div>
+              <div>VS Code + TypeScript = 1 个插件</div>
+              <div>Vim + Python = 1 个插件</div>
+              <div>Vim + TypeScript = 1 个插件</div>
+              <div class="text-slate-500">... 无尽的重复工作</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- After LSP -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="text-green-400 font-semibold mb-3 flex items-center gap-2">
+            <span>✅</span> 有了 LSP 之后
+          </div>
+          <div class="space-y-2 text-sm text-slate-300">
+            <p>每个编辑器只需实现 <strong>1 个 LSP 客户端</strong></p>
+            <p>每种语言只需实现 <strong>1 个语言服务器</strong></p>
+            <p class="text-green-300 font-semibold mt-3">只需要 M + N 个组件！</p>
+            <div class="bg-slate-900 rounded-lg p-3 mt-3 text-xs">
+              <div>编辑器：VS Code、Vim、Emacs (3个客户端)</div>
+              <div>语言：Python、TS、Rust (3个服务器)</div>
+              <div class="text-green-400 mt-2">总共只需 6 个组件，全部互通！</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 bg-cyan-500/20 border border-cyan-500/50 rounded-lg p-4">
+        <p class="text-cyan-300 text-sm text-center">
+          <strong>核心思想：</strong>M × N 问题 → M + N 问题，大大降低了开发和维护成本
+        </p>
+      </div>
+    </div>
+
+    <!-- LSP History -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">LSP 的历史</h3>
+
+      <div class="space-y-4">
+        <div class="flex gap-4 items-start">
+          <div class="w-20 text-cyan-400 font-mono text-sm shrink-0">2016</div>
+          <div>
+            <p class="text-slate-300">微软为 VS Code 开发了 LSP，随后开源</p>
+            <p class="text-xs text-slate-500 mt-1">与 Red Hat 和 Codenvy 合作推广标准化</p>
+          </div>
+        </div>
+        <div class="flex gap-4 items-start">
+          <div class="w-20 text-cyan-400 font-mono text-sm shrink-0">2017-2024</div>
+          <div>
+            <p class="text-slate-300">LSP 被广泛采用，成为行业标准</p>
+            <p class="text-xs text-slate-500 mt-1">支持 100+ 种编程语言，几乎所有主流编辑器</p>
+          </div>
+        </div>
+        <div class="flex gap-4 items-start">
+          <div class="w-20 text-amber-400 font-mono text-sm shrink-0">2025</div>
+          <div>
+            <p class="text-slate-300">AI 编程助手开始集成 LSP 能力</p>
+            <p class="text-xs text-slate-500 mt-1">Claude Code 在 2.0.74 版本添加了 LSP 支持</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How It Works Tab -->
+  <div id="how-it-works" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-cyan-400">LSP 通信机制</h2>
+
+      <div class="bg-slate-900 rounded-lg p-4 mb-4">
+        <p class="text-slate-300 text-sm mb-4">
+          LSP 使用 <strong class="text-amber-300">JSON-RPC</strong>（远程过程调用）协议进行通信。
+          编辑器发送请求，语言服务器返回结果。
+        </p>
+
+        <!-- Communication Flow -->
+        <div class="space-y-4">
+          <div class="message-box lsp-msg rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-cyan-600 px-2 py-1 rounded text-xs font-bold">1. 初始化</span>
+            </div>
+            <p class="text-sm text-slate-300">客户端发送 <code class="bg-slate-700 px-1 rounded">initialize</code> 请求，告知服务器自己的能力</p>
+          </div>
+
+          <div class="message-box lsp-msg rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-cyan-600 px-2 py-1 rounded text-xs font-bold">2. 文档同步</span>
+            </div>
+            <p class="text-sm text-slate-300">用户打开文件时，发送 <code class="bg-slate-700 px-1 rounded">textDocument/didOpen</code> 通知</p>
+          </div>
+
+          <div class="message-box lsp-msg rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-cyan-600 px-2 py-1 rounded text-xs font-bold">3. 功能请求</span>
+            </div>
+            <p class="text-sm text-slate-300">用户触发操作（如 Ctrl+Click），发送相应请求，服务器返回结果</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Example Request/Response -->
+      <h3 class="text-lg font-semibold mb-3 mt-6">真实的请求示例</h3>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-cyan-300 text-sm mb-2">请求：跳转到定义</div>
+          <div class="code-block text-green-400 text-xs">
+<pre>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "textDocument/definition",
+  "params": {
+    "textDocument": {
+      "uri": "file:///src/app.ts"
+    },
+    "position": {
+      "line": 10,
+      "character": 15
+    }
+  }
+}</pre>
+          </div>
+        </div>
+        <div>
+          <div class="text-green-300 text-sm mb-2">响应：定义位置</div>
+          <div class="code-block text-green-400 text-xs">
+<pre>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "uri": "file:///src/utils.ts",
+    "range": {
+      "start": { "line": 5, "character": 0 },
+      "end": { "line": 5, "character": 20 }
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LSP Features -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">LSP 提供的主要功能</h3>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-blue-600">🎯</div>
+            <div>
+              <div class="font-semibold">Go to Definition</div>
+              <div class="text-xs text-slate-500">跳转到定义</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">点击函数名，直接跳转到它的定义位置</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-purple-600">🔍</div>
+            <div>
+              <div class="font-semibold">Find References</div>
+              <div class="text-xs text-slate-500">查找引用</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">找到代码中所有使用该符号的地方</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-green-600">💡</div>
+            <div>
+              <div class="font-semibold">Hover Information</div>
+              <div class="text-xs text-slate-500">悬停信息</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">鼠标悬停显示类型信息和文档</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-amber-600">✨</div>
+            <div>
+              <div class="font-semibold">Auto Completion</div>
+              <div class="text-xs text-slate-500">自动补全</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">智能代码补全建议</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-red-600">⚠️</div>
+            <div>
+              <div class="font-semibold">Diagnostics</div>
+              <div class="text-xs text-slate-500">诊断错误</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">实时显示语法错误和警告</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="feature-icon bg-cyan-600">📝</div>
+            <div>
+              <div class="font-semibold">Document Symbols</div>
+              <div class="text-xs text-slate-500">文档符号</div>
+            </div>
+          </div>
+          <p class="text-sm text-slate-400">列出文件中所有的类、函数、变量</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claude Code Tab -->
+  <div id="claude-code" class="tab-content max-w-4xl mx-auto">
+    <div class="gradient-card rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-3xl">🤖</span>
+        <h2 class="text-xl font-semibold">Claude Code 的 LSP 集成</h2>
+      </div>
+
+      <div class="bg-slate-800 rounded-lg p-4 mb-4">
+        <p class="text-slate-300">
+          从版本 <strong class="text-amber-300">2.0.74</strong> 开始，Claude Code 内置了 LSP 支持。
+          这意味着 Claude 现在可以像 IDE 一样<strong class="text-cyan-300">真正理解你的代码结构</strong>，
+          而不仅仅是把代码当作普通文本处理。
+        </p>
+      </div>
+
+      <div class="bg-amber-500/20 border border-amber-500/50 rounded-lg p-4">
+        <p class="text-amber-300 text-sm">
+          <strong>重要意义：</strong>这是 AI 编程助手从"文本处理"向"代码理解"的重大飞跃！
+        </p>
+      </div>
+    </div>
+
+    <!-- Supported Features -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">Claude Code 支持的 LSP 功能</h3>
+
+      <div class="space-y-4">
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">🎯</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">goToDefinition</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              Claude 可以精确找到任何函数、类、变量的定义位置
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">🔍</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">findReferences</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              找到代码中所有使用某个符号的地方，重构时不会遗漏
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">📋</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">documentSymbol</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              获取文件的完整结构概览（所有类、函数、变量）
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">💡</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">hover</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              获取符号的类型信息和文档注释
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">🌐</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">workspaceSymbol</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              在整个项目中搜索符号，跨文件查找
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start bg-slate-900 rounded-lg p-4">
+          <div class="text-2xl">🔗</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-cyan-300">goToImplementation</span>
+              <span class="text-xs bg-green-600 px-2 py-0.5 rounded">已支持</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-1">
+              查找接口或抽象方法的具体实现
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Supported Languages -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">已支持的语言</h3>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🟦</div>
+          <div class="text-sm font-semibold">TypeScript</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🐍</div>
+          <div class="text-sm font-semibold">Python</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🦀</div>
+          <div class="text-sm font-semibold">Rust</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🐹</div>
+          <div class="text-sm font-semibold">Go</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">☕</div>
+          <div class="text-sm font-semibold">Java</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">🅺</div>
+          <div class="text-sm font-semibold">Kotlin</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">⚙️</div>
+          <div class="text-sm font-semibold">C/C++</div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-1">💎</div>
+          <div class="text-sm font-semibold">Ruby</div>
+        </div>
+      </div>
+
+      <p class="text-slate-500 text-xs mt-4 text-center">
+        更多语言支持持续添加中，可通过 /plugin 命令查看和安装
+      </p>
+    </div>
+  </div>
+
+  <!-- Impact Tab -->
+  <div id="impact" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-amber-400">Claude Code 支持 LSP 的重大影响</h2>
+
+      <p class="text-slate-300 mb-4">
+        LSP 的加入让 Claude Code 从一个"智能文本助手"进化为"真正的编程伙伴"。
+      </p>
+    </div>
+
+    <!-- Before vs After -->
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-6">
+        <div class="text-red-400 font-semibold mb-4 text-lg flex items-center gap-2">
+          <span>❌</span> 没有 LSP 时
+        </div>
+        <div class="space-y-3 text-sm">
+          <div class="flex gap-3">
+            <span class="text-red-400">•</span>
+            <p class="text-slate-300">Claude 只能通过<strong>文本匹配</strong>和<strong>正则表达式</strong>搜索代码</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400">•</span>
+            <p class="text-slate-300">无法区分同名的函数、变量（不同作用域）</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400">•</span>
+            <p class="text-slate-300">不知道代码的类型信息和继承关系</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400">•</span>
+            <p class="text-slate-300">重构时可能遗漏某些引用位置</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-red-400">•</span>
+            <p class="text-slate-300">对动态导入、别名导入理解困难</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+        <div class="text-green-400 font-semibold mb-4 text-lg flex items-center gap-2">
+          <span>✅</span> 有了 LSP 后
+        </div>
+        <div class="space-y-3 text-sm">
+          <div class="flex gap-3">
+            <span class="text-green-400">•</span>
+            <p class="text-slate-300">Claude 获得了<strong>语义级别</strong>的代码理解能力</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-400">•</span>
+            <p class="text-slate-300">精确定位任何符号的定义，不受同名干扰</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-400">•</span>
+            <p class="text-slate-300">理解类型系统、接口实现、继承链</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-400">•</span>
+            <p class="text-slate-300">重构时 100% 找到所有引用位置</p>
+          </div>
+          <div class="flex gap-3">
+            <span class="text-green-400">•</span>
+            <p class="text-slate-300">正确处理模块系统、别名、重导出</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Practical Benefits -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">实际场景的改进</h3>
+
+      <div class="space-y-4">
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="text-cyan-300 font-semibold mb-2">场景 1：理解大型代码库</div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="text-slate-400">
+              <span class="text-red-400">之前：</span>
+              "这个 handleSubmit 函数在哪定义的？" → Claude 可能找到多个同名函数，不确定是哪个
+            </div>
+            <div class="text-slate-400">
+              <span class="text-green-400">现在：</span>
+              Claude 直接通过 LSP 跳转到精确的定义位置，无歧义
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="text-cyan-300 font-semibold mb-2">场景 2：安全重构</div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="text-slate-400">
+              <span class="text-red-400">之前：</span>
+              重命名变量时，可能遗漏某些文件中的引用，导致运行时错误
+            </div>
+            <div class="text-slate-400">
+              <span class="text-green-400">现在：</span>
+              LSP 提供所有引用位置，重构可以做到滴水不漏
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="text-cyan-300 font-semibold mb-2">场景 3：类型安全的修改</div>
+          <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div class="text-slate-400">
+              <span class="text-red-400">之前：</span>
+              修改函数参数时，不知道调用方会不会出问题
+            </div>
+            <div class="text-slate-400">
+              <span class="text-green-400">现在：</span>
+              Claude 通过类型信息，提前预警不兼容的修改
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Industry Impact -->
+    <div class="bg-gradient-to-r from-cyan-600/30 to-amber-600/30 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">行业影响</h3>
+
+      <div class="grid md:grid-cols-3 gap-4 text-center">
+        <div>
+          <div class="text-3xl mb-2">🚀</div>
+          <div class="font-semibold text-cyan-300">更高效</div>
+          <p class="text-xs text-slate-400 mt-1">AI 理解代码更快、更准确</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🛡️</div>
+          <div class="font-semibold text-green-300">更安全</div>
+          <p class="text-xs text-slate-400 mt-1">重构和修改不再靠猜测</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🌐</div>
+          <div class="font-semibold text-amber-300">更通用</div>
+          <p class="text-xs text-slate-400 mt-1">支持任何有 LSP 的语言</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Usage Tab -->
+  <div id="usage" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-cyan-400">如何在 Claude Code 中使用 LSP</h2>
+
+      <div class="space-y-6">
+        <!-- Step 1 -->
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center font-bold shrink-0">1</div>
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg">安装 LSP 插件</h4>
+            <p class="text-slate-400 text-sm mt-1">在 Claude Code 中执行 <code class="bg-slate-700 px-2 py-0.5 rounded">/plugin</code> 命令</p>
+            <div class="code-block mt-3 text-sm">
+              <span class="text-slate-500"># 在 Claude Code 终端中输入</span><br>
+              <span class="text-cyan-400">/plugin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center font-bold shrink-0">2</div>
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg">选择语言对应的 LSP 服务器</h4>
+            <p class="text-slate-400 text-sm mt-1">从官方市场安装对应语言的 LSP 插件</p>
+            <div class="bg-slate-900 rounded-lg p-3 mt-3 text-sm">
+              <div class="text-slate-300">常用 LSP 服务器：</div>
+              <ul class="text-slate-400 mt-2 space-y-1 text-xs">
+                <li>• TypeScript: <code class="bg-slate-700 px-1 rounded">typescript-language-server</code></li>
+                <li>• Python: <code class="bg-slate-700 px-1 rounded">pyright</code> 或 <code class="bg-slate-700 px-1 rounded">pylsp</code></li>
+                <li>• Rust: <code class="bg-slate-700 px-1 rounded">rust-analyzer</code></li>
+                <li>• Go: <code class="bg-slate-700 px-1 rounded">gopls</code></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex gap-4">
+          <div class="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center font-bold shrink-0">3</div>
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg">让 Claude 使用 LSP</h4>
+            <p class="text-slate-400 text-sm mt-1">在提问时明确要求使用 LSP 功能</p>
+            <div class="code-block mt-3 text-sm">
+              <span class="text-slate-500"># 示例提问</span><br>
+              <span class="text-green-400">"请用 LSP 查找 handleSubmit 函数的定义位置"</span><br><br>
+              <span class="text-green-400">"用 LSP 找到所有调用 getUserById 的地方"</span><br><br>
+              <span class="text-green-400">"用 LSP 显示这个文件的所有导出函数"</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Example Conversation -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">实际使用示例</h3>
+
+      <div class="space-y-3">
+        <div class="message-box claude-msg rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-orange-600 px-2 py-1 rounded text-xs font-bold">你说</span>
+          </div>
+          <p class="text-sm text-slate-300">帮我找一下 UserService 类的所有方法，用 LSP 查询</p>
+        </div>
+
+        <div class="message-box result-msg rounded-lg">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-green-600 px-2 py-1 rounded text-xs font-bold">Claude</span>
+          </div>
+          <div class="text-sm text-slate-300">
+            <p class="mb-2">我使用 LSP documentSymbol 查询到 UserService 类的结构：</p>
+            <div class="bg-slate-900 rounded p-2 text-xs font-mono">
+              <div>📦 UserService (class) - src/services/user.ts:15</div>
+              <div class="ml-4">├── constructor() - line 16</div>
+              <div class="ml-4">├── getById(id: string) - line 20</div>
+              <div class="ml-4">├── create(data: UserDTO) - line 35</div>
+              <div class="ml-4">├── update(id: string, data: Partial&lt;User&gt;) - line 52</div>
+              <div class="ml-4">└── delete(id: string) - line 68</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="bg-amber-500/20 border border-amber-500/50 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-amber-300">使用技巧</h3>
+
+      <div class="space-y-3 text-sm">
+        <div class="flex gap-3">
+          <span class="text-amber-400">💡</span>
+          <p class="text-slate-300">LSP 功能目前需要<strong>明确提示</strong>才会使用，比如说"用 LSP 查找"</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="text-amber-400">💡</span>
+          <p class="text-slate-300">确保项目中已安装对应语言的 LSP 服务器</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="text-amber-400">💡</span>
+          <p class="text-slate-300">LSP 对大型代码库特别有用，可以精确定位而不是模糊搜索</p>
+        </div>
+        <div class="flex gap-3">
+          <span class="text-amber-400">💡</span>
+          <p class="text-slate-300">结合 LSP 和常规搜索，可以获得最全面的代码理解</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- References -->
+    <div class="bg-slate-800 rounded-xl p-6 mt-6">
+      <h3 class="text-lg font-semibold mb-4">参考资源</h3>
+
+      <div class="space-y-2 text-sm">
+        <a href="https://microsoft.github.io/language-server-protocol/" target="_blank" class="block text-cyan-400 hover:underline">
+          📚 LSP 官方文档 - microsoft.github.io/language-server-protocol
+        </a>
+        <a href="https://code.claude.com/docs/en/plugins" target="_blank" class="block text-cyan-400 hover:underline">
+          📖 Claude Code 插件文档 - code.claude.com/docs/en/plugins
+        </a>
+        <a href="https://github.com/Piebald-AI/claude-code-lsps" target="_blank" class="block text-cyan-400 hover:underline">
+          🔌 Claude Code LSP 插件市场 - github.com/Piebald-AI/claude-code-lsps
+        </a>
+        <a href="https://github.com/ktnyt/cclsp" target="_blank" class="block text-cyan-400 hover:underline">
+          🛠️ cclsp - Claude Code LSP 增强工具 - github.com/ktnyt/cclsp
+        </a>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- End capture div -->
+
+  <!-- Back to Home -->
+  <div class="text-center mt-8">
+    <a href="index.html" class="text-slate-400 hover:text-white transition-colors">
+      ← 返回首页
+    </a>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center mt-12 text-slate-500 text-sm">
+    用心制作，让技术知识更易懂
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
