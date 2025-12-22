@@ -9,7 +9,9 @@
   <style>
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .tab-btn.active { background-color: #2563eb; color: white; }
+    .step-dot { transition: all 0.3s ease; }
+    .step-dot.active { background-color: #2563eb; transform: scale(1.2); }
+    .step-dot.completed { background-color: #22c55e; }
   </style>
 </head>
 <body class="min-h-screen bg-slate-900 text-white p-8">
@@ -17,16 +19,27 @@
   <h1 class="text-3xl font-bold text-center mb-2">👻 NPM 幽灵依赖</h1>
   <p class="text-slate-400 text-center mb-8">Phantom Dependencies</p>
 
-  <!-- Tab Navigation -->
+  <!-- Step Indicator -->
+  <div class="flex justify-center items-center gap-4 mb-8">
+    <button class="step-dot active w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="0">1</button>
+    <div class="w-8 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="1">2</button>
+    <div class="w-8 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="2">3</button>
+    <div class="w-8 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="3">4</button>
+  </div>
+
+  <!-- Step Labels -->
   <div class="flex justify-center gap-2 mb-8 flex-wrap">
-    <button class="tab-btn active px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="problem">🔍 问题现象</button>
-    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="why">❓ 为什么会这样</button>
-    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="danger">⚠️ 危险之处</button>
-    <button class="tab-btn px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-all" data-tab="solution">✅ 解决方案</button>
+    <span class="step-label text-blue-400 text-sm px-3 py-1 bg-blue-500/20 rounded-full" data-step="0">🔍 问题现象</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="1">❓ 为什么会这样</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="2">⚠️ 危险之处</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="3">✅ 解决方案</span>
   </div>
 
   <!-- Problem Tab -->
-  <div id="problem" class="tab-content active max-w-4xl mx-auto">
+  <div id="step-0" class="tab-content active max-w-4xl mx-auto">
     <div class="bg-slate-800 rounded-xl p-6 mb-6">
       <h2 class="text-xl font-semibold mb-4 text-amber-400">什么是幽灵依赖？</h2>
       <p class="text-slate-300 mb-4">
@@ -37,7 +50,7 @@
 
     <div class="bg-slate-800 rounded-xl p-6">
       <h3 class="text-lg font-semibold mb-6 text-center">代码示例</h3>
-      
+
       <div class="grid md:grid-cols-2 gap-6">
         <!-- package.json -->
         <div class="bg-slate-900 rounded-lg p-4">
@@ -79,20 +92,29 @@
         </div>
       </div>
     </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <div></div>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：为什么会这样</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
   </div>
 
   <!-- Why Tab -->
-  <div id="why" class="tab-content max-w-5xl mx-auto">
+  <div id="step-1" class="tab-content max-w-5xl mx-auto">
     <div class="bg-slate-800 rounded-xl p-6">
       <h2 class="text-xl font-semibold mb-6 text-center text-amber-400">npm 的扁平化安装机制</h2>
-      
+
       <div class="flex flex-col lg:flex-row justify-around items-start gap-8">
         <!-- Your Project -->
         <div class="flex-1 w-full">
           <div class="text-center mb-4">
             <span class="bg-blue-600 px-4 py-2 rounded-lg inline-block">📦 你的项目</span>
           </div>
-          
+
           <div class="flex justify-center">
             <div class="w-0.5 h-8 bg-slate-600"></div>
           </div>
@@ -124,7 +146,7 @@
           <div class="text-center mb-4">
             <span class="bg-purple-600 px-4 py-2 rounded-lg inline-block">📁 node_modules</span>
           </div>
-          
+
           <div class="bg-slate-900 rounded-lg p-4 text-sm">
             <div class="space-y-2">
               <div class="flex items-center gap-2">
@@ -149,7 +171,7 @@
               <div class="text-slate-500">...</div>
             </div>
           </div>
-          
+
           <div class="mt-3 text-xs text-center text-slate-400">
             所有依赖都被<span class="text-amber-400">提升</span>到顶层
           </div>
@@ -163,10 +185,22 @@
         </p>
       </div>
     </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：危险之处</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
   </div>
 
   <!-- Danger Tab -->
-  <div id="danger" class="tab-content max-w-4xl mx-auto">
+  <div id="step-2" class="tab-content max-w-4xl mx-auto">
     <div class="grid gap-4">
       <div class="bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex gap-4 items-start">
         <span class="text-3xl">💥</span>
@@ -175,7 +209,7 @@
           <p class="text-slate-300 text-sm">express 升级后可能不再依赖 qs，你的代码直接报错 "Cannot find module"</p>
         </div>
       </div>
-      
+
       <div class="bg-orange-500/20 border border-orange-500/50 rounded-xl p-4 flex gap-4 items-start">
         <span class="text-3xl">🎲</span>
         <div>
@@ -183,7 +217,7 @@
           <p class="text-slate-300 text-sm">你用的 qs 版本完全取决于 express 用的版本，可能和你期望的 API 不一致</p>
         </div>
       </div>
-      
+
       <div class="bg-yellow-500/20 border border-yellow-500/50 rounded-xl p-4 flex gap-4 items-start">
         <span class="text-3xl">👥</span>
         <div>
@@ -191,7 +225,7 @@
           <p class="text-slate-300 text-sm">同事 clone 项目后，可能因为 npm 版本不同导致依赖结构不同，出现诡异 bug</p>
         </div>
       </div>
-      
+
       <div class="bg-purple-500/20 border border-purple-500/50 rounded-xl p-4 flex gap-4 items-start">
         <span class="text-3xl">🔍</span>
         <div>
@@ -230,10 +264,22 @@
         </div>
       </div>
     </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：解决方案</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
   </div>
 
   <!-- Solution Tab -->
-  <div id="solution" class="tab-content max-w-4xl mx-auto">
+  <div id="step-3" class="tab-content max-w-4xl mx-auto">
     <div class="grid gap-6">
       <!-- Solution 1 -->
       <div class="bg-slate-800 rounded-xl p-6">
@@ -295,6 +341,18 @@
         🎯 <strong>核心原则：</strong>package.json 里没有的，代码里就别用
       </p>
     </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <div class="flex items-center gap-2 px-6 py-3 bg-green-600 rounded-lg font-semibold">
+        <span>🎉</span>
+        <span>学习完成！</span>
+      </div>
+    </div>
   </div>
   </div>
   <!-- End capture div -->
@@ -320,10 +378,10 @@
   <!-- Download Buttons -->
   <div class="flex justify-center gap-4 mt-8 mb-4 flex-wrap">
     <button onclick="downloadCurrentTab()" class="px-6 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-all flex items-center gap-2">
-      📸 下载当前 Tab 为图片
+      📸 下载当前页面
     </button>
     <button onclick="downloadAllTabs()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all flex items-center gap-2">
-      📦 下载全部 Tab 为图片
+      📦 下载全部页面
     </button>
   </div>
 
@@ -333,43 +391,83 @@
   </div>
 
   <script>
-    const tabNames = {
-      'problem': '问题现象',
-      'why': '为什么会这样',
-      'danger': '危险之处',
-      'solution': '解决方案'
-    };
+    const steps = ['step-0', 'step-1', 'step-2', 'step-3'];
+    const stepNames = ['问题现象', '为什么会这样', '危险之处', '解决方案'];
+    let currentStep = 0;
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Remove active from all tabs and buttons
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        // Add active to clicked button and corresponding tab
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
+    function updateUI() {
+      // Hide all tabs, show current
+      steps.forEach((step, index) => {
+        const el = document.getElementById(step);
+        el.classList.toggle('active', index === currentStep);
+      });
+
+      // Update step dots
+      document.querySelectorAll('.step-dot').forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index === currentStep) {
+          dot.classList.add('active');
+        } else if (index < currentStep) {
+          dot.classList.add('completed');
+        }
+      });
+
+      // Update step labels
+      document.querySelectorAll('.step-label').forEach((label, index) => {
+        label.classList.remove('text-blue-400', 'bg-blue-500/20');
+        label.classList.add('text-slate-400');
+        if (index === currentStep) {
+          label.classList.remove('text-slate-400');
+          label.classList.add('text-blue-400', 'bg-blue-500/20');
+        }
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      updateUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Click on step dots
+    document.querySelectorAll('.step-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        goToStep(parseInt(dot.dataset.step));
       });
     });
 
     function getCurrentTab() {
-      const activeBtn = document.querySelector('.tab-btn.active');
-      return activeBtn ? activeBtn.dataset.tab : 'problem';
+      return currentStep;
     }
 
     async function downloadCurrentTab() {
-      const currentTab = getCurrentTab();
       const capture = document.getElementById('capture');
-      
+
       try {
         const canvas = await html2canvas(capture, {
           backgroundColor: '#0f172a',
           scale: 2,
           useCORS: true
         });
-        
+
         const link = document.createElement('a');
-        link.download = `npm-幽灵依赖-${tabNames[currentTab]}.png`;
+        link.download = `npm-幽灵依赖-${stepNames[currentStep]}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       } catch (err) {
@@ -378,32 +476,26 @@
     }
 
     async function downloadAllTabs() {
-      const tabs = ['problem', 'why', 'danger', 'solution'];
       const capture = document.getElementById('capture');
-      
-      for (const tab of tabs) {
-        // Switch to this tab
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tab).classList.add('active');
-        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-        
-        // Wait for DOM update
+
+      for (let i = 0; i < steps.length; i++) {
+        currentStep = i;
+        updateUI();
+
         await new Promise(r => setTimeout(r, 100));
-        
+
         try {
           const canvas = await html2canvas(capture, {
             backgroundColor: '#0f172a',
             scale: 2,
             useCORS: true
           });
-          
+
           const link = document.createElement('a');
-          link.download = `npm-幽灵依赖-${tabs.indexOf(tab) + 1}-${tabNames[tab]}.png`;
+          link.download = `npm-幽灵依赖-${i + 1}-${stepNames[i]}.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
-          
-          // Small delay between downloads
+
           await new Promise(r => setTimeout(r, 300));
         } catch (err) {
           console.error('下载失败:', err);
