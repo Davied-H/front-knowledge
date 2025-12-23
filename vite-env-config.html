@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vite 多环境配置管理 - 前端工程化实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .step-dot { transition: all 0.3s ease; }
+    .step-dot.active { background-color: #8b5cf6; transform: scale(1.2); }
+    .step-dot.completed { background-color: #22c55e; }
+
+    .code-block {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+    }
+
+    .file-tab {
+      background: #334155;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: inline-block;
+      margin-bottom: -1px;
+    }
+
+    .file-tab.active {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    .gradient-card {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(34, 197, 94, 0.1));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .env-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .env-dev { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .env-staging { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .env-prod { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .tree-line {
+      border-left: 2px solid #475569;
+      margin-left: 12px;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-8">
+  <div id="capture">
+  <h1 class="text-3xl font-bold text-center mb-2">Vite 多环境配置管理</h1>
+  <p class="text-slate-400 text-center mb-8">掌握前端项目的环境变量与多环境部署</p>
+
+  <!-- Step Indicator -->
+  <div class="flex justify-center items-center gap-3 mb-8">
+    <button class="step-dot active w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="0">1</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="1">2</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="2">3</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="3">4</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="4">5</button>
+  </div>
+
+  <!-- Step Labels -->
+  <div class="flex justify-center gap-2 mb-8 flex-wrap">
+    <span class="step-label text-purple-400 text-sm px-3 py-1 bg-purple-500/20 rounded-full" data-step="0">为什么需要</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="1">.env 文件规则</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="2">使用环境变量</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="3">多环境实战</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="4">最佳实践</span>
+  </div>
+
+  <!-- Step 0: Why We Need -->
+  <div id="step-0" class="tab-content active max-w-4xl mx-auto">
+    <div class="gradient-card rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-center">为什么需要多环境配置？</h2>
+
+      <div class="bg-slate-800 rounded-lg p-4 mb-4">
+        <p class="text-slate-300 leading-relaxed">
+          在实际开发中，我们的应用通常需要运行在<strong class="text-purple-400">多个不同的环境</strong>中：
+          开发环境、测试环境、预发布环境、生产环境等。
+        </p>
+        <p class="text-slate-400 text-sm mt-2">
+          不同环境下，<strong class="text-amber-300">API 地址、配置参数、功能开关</strong>等都可能不同。
+        </p>
+      </div>
+
+      <!-- Environment Examples -->
+      <div class="grid md:grid-cols-3 gap-4 mt-6">
+        <div class="bg-slate-800 rounded-lg p-4 text-center">
+          <span class="env-badge env-dev mb-3">Development</span>
+          <div class="text-sm text-slate-400 mt-2">
+            <p>API: localhost:3000</p>
+            <p>Debug: 开启</p>
+            <p>Mock: 使用</p>
+          </div>
+        </div>
+        <div class="bg-slate-800 rounded-lg p-4 text-center">
+          <span class="env-badge env-staging mb-3">Staging</span>
+          <div class="text-sm text-slate-400 mt-2">
+            <p>API: staging.api.com</p>
+            <p>Debug: 开启</p>
+            <p>Mock: 不使用</p>
+          </div>
+        </div>
+        <div class="bg-slate-800 rounded-lg p-4 text-center">
+          <span class="env-badge env-prod mb-3">Production</span>
+          <div class="text-sm text-slate-400 mt-2">
+            <p>API: api.example.com</p>
+            <p>Debug: 关闭</p>
+            <p>Mock: 不使用</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pain Points -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-red-400">没有环境配置的痛点</h2>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">1</span>
+            <div>
+              <div class="font-semibold text-red-300">手动修改代码</div>
+              <p class="text-sm text-slate-400 mt-1">每次部署都要手动改 API 地址，容易出错</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">2</span>
+            <div>
+              <div class="font-semibold text-red-300">敏感信息泄露</div>
+              <p class="text-sm text-slate-400 mt-1">密钥写在代码里，不小心提交到 Git</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">3</span>
+            <div>
+              <div class="font-semibold text-red-300">团队协作困难</div>
+              <p class="text-sm text-slate-400 mt-1">不同开发者的本地配置不一致</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">4</span>
+            <div>
+              <div class="font-semibold text-red-300">部署流程复杂</div>
+              <p class="text-sm text-slate-400 mt-1">CI/CD 无法自动化处理环境差异</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vite Solution -->
+    <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-3xl">⚡</span>
+        <h2 class="text-xl font-semibold text-green-400">Vite 的解决方案</h2>
+      </div>
+      <p class="text-slate-300">
+        Vite 内置了<strong class="text-green-300">环境变量</strong>支持，通过 <code class="bg-slate-700 px-2 py-0.5 rounded">.env</code> 文件
+        可以轻松管理不同环境的配置，无需修改代码，安全且自动化。
+      </p>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <div></div>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：.env 文件规则</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 1: .env File Rules -->
+  <div id="step-1" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-purple-400">.env 文件命名规则</h2>
+
+      <p class="text-slate-300 mb-4">
+        Vite 会根据<strong class="text-amber-300">启动模式</strong>自动加载对应的 .env 文件。
+      </p>
+
+      <!-- File Structure -->
+      <div class="bg-slate-900 rounded-lg p-4 mb-6">
+        <div class="text-sm text-slate-400 mb-3">项目根目录</div>
+        <div class="font-mono text-sm">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="text-yellow-400">📁</span> my-vite-project/
+          </div>
+          <div class="tree-line">
+            <div class="flex items-center gap-2 py-1">
+              <span class="text-green-400">📄</span>
+              <span class="text-white">.env</span>
+              <span class="text-slate-500 text-xs ml-2">← 所有环境都会加载</span>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+              <span class="text-green-400">📄</span>
+              <span class="text-white">.env.local</span>
+              <span class="text-slate-500 text-xs ml-2">← 本地覆盖，被 git 忽略</span>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+              <span class="text-blue-400">📄</span>
+              <span class="text-white">.env.development</span>
+              <span class="text-slate-500 text-xs ml-2">← 开发环境</span>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+              <span class="text-yellow-400">📄</span>
+              <span class="text-white">.env.staging</span>
+              <span class="text-slate-500 text-xs ml-2">← 预发布环境</span>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+              <span class="text-red-400">📄</span>
+              <span class="text-white">.env.production</span>
+              <span class="text-slate-500 text-xs ml-2">← 生产环境</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Priority -->
+      <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+        <h3 class="font-semibold text-purple-300 mb-3">加载优先级（后加载的会覆盖前面的）</h3>
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="bg-slate-700 px-3 py-1 rounded">.env</span>
+          <span class="text-slate-500">→</span>
+          <span class="bg-slate-700 px-3 py-1 rounded">.env.local</span>
+          <span class="text-slate-500">→</span>
+          <span class="bg-slate-700 px-3 py-1 rounded">.env.[mode]</span>
+          <span class="text-slate-500">→</span>
+          <span class="bg-purple-600 px-3 py-1 rounded">.env.[mode].local</span>
+        </div>
+        <p class="text-slate-400 text-xs mt-3">
+          <strong class="text-amber-300">提示：</strong>.local 文件不会被提交到 Git，适合存放个人配置和敏感信息
+        </p>
+      </div>
+    </div>
+
+    <!-- Mode Explanation -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">什么是 Mode（模式）？</h3>
+
+      <div class="space-y-4">
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="env-badge env-dev">development</span>
+            <code class="text-slate-400 text-sm">vite / vite dev / vite serve</code>
+          </div>
+          <p class="text-sm text-slate-400">默认开发模式，运行 dev server 时使用</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="env-badge env-prod">production</span>
+            <code class="text-slate-400 text-sm">vite build</code>
+          </div>
+          <p class="text-sm text-slate-400">默认生产模式，打包构建时使用</p>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="env-badge env-staging">自定义模式</span>
+            <code class="text-slate-400 text-sm">vite build --mode staging</code>
+          </div>
+          <p class="text-sm text-slate-400">通过 --mode 参数指定任意模式名称</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Important Note -->
+    <div class="bg-amber-500/20 border border-amber-500/50 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-3 text-amber-300">重要：变量命名规则</h3>
+      <div class="code-block mb-4">
+        <span class="text-green-400"># 会暴露给客户端 (必须以 VITE_ 开头)</span><br>
+        <span class="text-cyan-400">VITE_API_URL</span>=https://api.example.com<br>
+        <span class="text-cyan-400">VITE_APP_TITLE</span>=My App<br><br>
+        <span class="text-red-400"># 不会暴露给客户端 (没有 VITE_ 前缀)</span><br>
+        <span class="text-slate-400">DB_PASSWORD</span>=secret123<br>
+        <span class="text-slate-400">API_SECRET</span>=xxx
+      </div>
+      <p class="text-sm text-slate-300">
+        只有以 <code class="bg-slate-700 px-2 py-0.5 rounded">VITE_</code> 开头的变量才会被打包到前端代码中，
+        这是<strong class="text-amber-300">安全设计</strong>，防止敏感信息泄露。
+      </p>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：使用环境变量</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Using Environment Variables -->
+  <div id="step-2" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-purple-400">在代码中使用环境变量</h2>
+
+      <!-- Client Side -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm">1</span>
+          在前端代码中使用
+        </h3>
+        <div class="file-tab active">.env.development</div>
+        <div class="code-block rounded-t-none">
+          <span class="text-cyan-400">VITE_API_URL</span>=http://localhost:3000/api<br>
+          <span class="text-cyan-400">VITE_APP_TITLE</span>=My App (Dev)
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <div class="file-tab active">src/api/config.ts</div>
+        <div class="code-block rounded-t-none">
+          <span class="text-slate-400">// 通过 import.meta.env 访问环境变量</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">apiUrl</span> = <span class="text-amber-300">import.meta.env.VITE_API_URL</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">appTitle</span> = <span class="text-amber-300">import.meta.env.VITE_APP_TITLE</span><br><br>
+          <span class="text-slate-400">// 内置变量</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">mode</span> = <span class="text-amber-300">import.meta.env.MODE</span>      <span class="text-slate-500">// 'development' | 'production' | 自定义</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">isDev</span> = <span class="text-amber-300">import.meta.env.DEV</span>       <span class="text-slate-500">// boolean</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">isProd</span> = <span class="text-amber-300">import.meta.env.PROD</span>      <span class="text-slate-500">// boolean</span><br>
+          <span class="text-purple-400">const</span> <span class="text-cyan-400">baseUrl</span> = <span class="text-amber-300">import.meta.env.BASE_URL</span>  <span class="text-slate-500">// 部署基础路径</span>
+        </div>
+      </div>
+
+      <!-- TypeScript Support -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm">2</span>
+          TypeScript 类型支持
+        </h3>
+        <div class="file-tab active">src/vite-env.d.ts</div>
+        <div class="code-block rounded-t-none">
+          <span class="text-slate-400">/// &lt;reference types="vite/client" /&gt;</span><br><br>
+          <span class="text-purple-400">interface</span> <span class="text-green-400">ImportMetaEnv</span> {<br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">readonly</span> <span class="text-cyan-400">VITE_API_URL</span>: <span class="text-green-400">string</span><br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">readonly</span> <span class="text-cyan-400">VITE_APP_TITLE</span>: <span class="text-green-400">string</span><br>
+          <span class="text-slate-300">  </span><span class="text-slate-400">// 添加更多环境变量类型...</span><br>
+          }<br><br>
+          <span class="text-purple-400">interface</span> <span class="text-green-400">ImportMeta</span> {<br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">readonly</span> <span class="text-cyan-400">env</span>: <span class="text-green-400">ImportMetaEnv</span><br>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Vite Config -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+        <span class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm">3</span>
+        在 vite.config.ts 中使用
+      </h3>
+
+      <div class="file-tab active">vite.config.ts</div>
+      <div class="code-block rounded-t-none">
+        <span class="text-purple-400">import</span> { defineConfig, <span class="text-cyan-400">loadEnv</span> } <span class="text-purple-400">from</span> <span class="text-green-400">'vite'</span><br><br>
+        <span class="text-purple-400">export default</span> defineConfig(({ <span class="text-cyan-400">mode</span> }) => {<br>
+        <span class="text-slate-300">  </span><span class="text-slate-400">// 加载环境变量</span><br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">const</span> <span class="text-cyan-400">env</span> = <span class="text-amber-300">loadEnv</span>(mode, process.cwd(), <span class="text-green-400">''</span>)<br><br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">return</span> {<br>
+        <span class="text-slate-300">    </span><span class="text-cyan-400">server</span>: {<br>
+        <span class="text-slate-300">      </span><span class="text-cyan-400">proxy</span>: {<br>
+        <span class="text-slate-300">        </span><span class="text-green-400">'/api'</span>: {<br>
+        <span class="text-slate-300">          </span><span class="text-cyan-400">target</span>: env.<span class="text-amber-300">VITE_API_URL</span>,<br>
+        <span class="text-slate-300">          </span><span class="text-cyan-400">changeOrigin</span>: <span class="text-purple-400">true</span><br>
+        <span class="text-slate-300">        </span>}<br>
+        <span class="text-slate-300">      </span>}<br>
+        <span class="text-slate-300">    </span>}<br>
+        <span class="text-slate-300">  </span>}<br>
+        })
+      </div>
+
+      <div class="bg-cyan-500/20 border border-cyan-500/50 rounded-lg p-4 mt-4">
+        <p class="text-sm text-cyan-300">
+          <strong>注意：</strong><code class="bg-slate-700 px-1 rounded">loadEnv</code> 的第三个参数是前缀过滤，
+          传空字符串 <code class="bg-slate-700 px-1 rounded">''</code> 可以加载所有变量，不仅限于 VITE_ 开头的。
+        </p>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：多环境实战</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Multi-Environment Practice -->
+  <div id="step-3" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-purple-400">多环境配置实战</h2>
+
+      <p class="text-slate-300 mb-6">
+        假设我们有三个环境：<span class="env-badge env-dev">开发</span>
+        <span class="env-badge env-staging">预发布</span>
+        <span class="env-badge env-prod">生产</span>
+      </p>
+
+      <!-- .env files -->
+      <div class="grid md:grid-cols-3 gap-4 mb-6">
+        <div>
+          <div class="file-tab active">.env.development</div>
+          <div class="code-block rounded-t-none text-xs">
+            <span class="text-cyan-400">VITE_API_URL</span>=http://localhost:3000<br>
+            <span class="text-cyan-400">VITE_ENV</span>=development<br>
+            <span class="text-cyan-400">VITE_DEBUG</span>=true
+          </div>
+        </div>
+        <div>
+          <div class="file-tab active">.env.staging</div>
+          <div class="code-block rounded-t-none text-xs">
+            <span class="text-cyan-400">VITE_API_URL</span>=https://staging-api.com<br>
+            <span class="text-cyan-400">VITE_ENV</span>=staging<br>
+            <span class="text-cyan-400">VITE_DEBUG</span>=true
+          </div>
+        </div>
+        <div>
+          <div class="file-tab active">.env.production</div>
+          <div class="code-block rounded-t-none text-xs">
+            <span class="text-cyan-400">VITE_API_URL</span>=https://api.example.com<br>
+            <span class="text-cyan-400">VITE_ENV</span>=production<br>
+            <span class="text-cyan-400">VITE_DEBUG</span>=false
+          </div>
+        </div>
+      </div>
+
+      <!-- Package.json scripts -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3">配置 npm scripts</h3>
+        <div class="file-tab active">package.json</div>
+        <div class="code-block rounded-t-none">
+          {<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">"scripts"</span>: {<br>
+          <span class="text-slate-300">    </span><span class="text-green-400">"dev"</span>: <span class="text-amber-300">"vite"</span>,<br>
+          <span class="text-slate-300">    </span><span class="text-green-400">"build"</span>: <span class="text-amber-300">"vite build"</span>,<br>
+          <span class="text-slate-300">    </span><span class="text-green-400">"build:staging"</span>: <span class="text-amber-300">"vite build --mode staging"</span>,<br>
+          <span class="text-slate-300">    </span><span class="text-green-400">"build:prod"</span>: <span class="text-amber-300">"vite build --mode production"</span>,<br>
+          <span class="text-slate-300">    </span><span class="text-green-400">"preview:staging"</span>: <span class="text-amber-300">"vite preview --mode staging"</span><br>
+          <span class="text-slate-300">  </span>}<br>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Practical Usage -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">实际使用示例</h3>
+
+      <div class="file-tab active">src/config/index.ts</div>
+      <div class="code-block rounded-t-none mb-4">
+        <span class="text-slate-400">// 统一配置管理</span><br>
+        <span class="text-purple-400">export const</span> <span class="text-cyan-400">config</span> = {<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">apiUrl</span>: import.meta.env.<span class="text-amber-300">VITE_API_URL</span>,<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">env</span>: import.meta.env.<span class="text-amber-300">VITE_ENV</span>,<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">debug</span>: import.meta.env.<span class="text-amber-300">VITE_DEBUG</span> === <span class="text-green-400">'true'</span>,<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">isDev</span>: import.meta.env.<span class="text-amber-300">DEV</span>,<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">isProd</span>: import.meta.env.<span class="text-amber-300">PROD</span>,<br>
+        } <span class="text-purple-400">as const</span>
+      </div>
+
+      <div class="file-tab active">src/utils/logger.ts</div>
+      <div class="code-block rounded-t-none">
+        <span class="text-purple-400">import</span> { config } <span class="text-purple-400">from</span> <span class="text-green-400">'@/config'</span><br><br>
+        <span class="text-purple-400">export const</span> <span class="text-cyan-400">logger</span> = {<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">log</span>(...args: <span class="text-green-400">any</span>[]) {<br>
+        <span class="text-slate-300">    </span><span class="text-purple-400">if</span> (config.<span class="text-amber-300">debug</span>) {<br>
+        <span class="text-slate-300">      </span>console.log(<span class="text-green-400">`[${config.env}]`</span>, ...args)<br>
+        <span class="text-slate-300">    </span>}<br>
+        <span class="text-slate-300">  </span>},<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">error</span>(...args: <span class="text-green-400">any</span>[]) {<br>
+        <span class="text-slate-300">    </span>console.error(<span class="text-green-400">`[${config.env}]`</span>, ...args)<br>
+        <span class="text-slate-300">  </span>}<br>
+        }
+      </div>
+    </div>
+
+    <!-- CI/CD Integration -->
+    <div class="bg-gradient-to-r from-purple-500/20 to-green-500/20 border border-purple-500/30 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">CI/CD 集成示例</h3>
+
+      <div class="file-tab active">.github/workflows/deploy.yml</div>
+      <div class="code-block rounded-t-none text-xs">
+        <span class="text-cyan-400">jobs</span>:<br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">deploy-staging</span>:<br>
+        <span class="text-slate-300">    </span><span class="text-cyan-400">steps</span>:<br>
+        <span class="text-slate-300">      </span>- <span class="text-cyan-400">run</span>: npm run build:staging<br>
+        <span class="text-slate-300">      </span>- <span class="text-cyan-400">run</span>: <span class="text-slate-400"># deploy to staging server</span><br><br>
+        <span class="text-slate-300">  </span><span class="text-cyan-400">deploy-production</span>:<br>
+        <span class="text-slate-300">    </span><span class="text-cyan-400">steps</span>:<br>
+        <span class="text-slate-300">      </span>- <span class="text-cyan-400">run</span>: npm run build:prod<br>
+        <span class="text-slate-300">      </span>- <span class="text-cyan-400">run</span>: <span class="text-slate-400"># deploy to production server</span>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：最佳实践</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 4: Best Practices -->
+  <div id="step-4" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-4 text-purple-400">最佳实践</h2>
+
+      <div class="space-y-4">
+        <!-- Practice 1 -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-green-400 text-2xl">1</span>
+            <div>
+              <div class="font-semibold text-green-300">使用 .env.example 作为模板</div>
+              <p class="text-sm text-slate-400 mt-1">
+                提交一个 .env.example 文件到仓库，列出所有需要的环境变量（不含真实值），方便团队成员快速配置。
+              </p>
+              <div class="code-block mt-3 text-xs">
+                <span class="text-slate-400"># .env.example - 复制此文件为 .env.local 并填入真实值</span><br>
+                VITE_API_URL=<br>
+                VITE_APP_TITLE=<br>
+                VITE_DEBUG=
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice 2 -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-green-400 text-2xl">2</span>
+            <div>
+              <div class="font-semibold text-green-300">正确配置 .gitignore</div>
+              <p class="text-sm text-slate-400 mt-1">
+                确保敏感配置不会被提交到版本控制。
+              </p>
+              <div class="code-block mt-3 text-xs">
+                <span class="text-slate-400"># .gitignore</span><br>
+                .env.local<br>
+                .env.*.local<br>
+                <span class="text-slate-400"># 注意：.env.development 等可以提交（不含敏感信息）</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice 3 -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-green-400 text-2xl">3</span>
+            <div>
+              <div class="font-semibold text-green-300">设置默认值防止崩溃</div>
+              <p class="text-sm text-slate-400 mt-1">
+                环境变量可能未定义，始终提供合理的默认值。
+              </p>
+              <div class="code-block mt-3 text-xs">
+                <span class="text-purple-400">const</span> apiUrl = import.meta.env.VITE_API_URL <span class="text-purple-400">||</span> <span class="text-green-400">'/api'</span><br>
+                <span class="text-purple-400">const</span> timeout = Number(import.meta.env.VITE_TIMEOUT) <span class="text-purple-400">||</span> <span class="text-amber-300">5000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice 4 -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-green-400 text-2xl">4</span>
+            <div>
+              <div class="font-semibold text-green-300">验证必需的环境变量</div>
+              <p class="text-sm text-slate-400 mt-1">
+                在应用启动时验证关键环境变量是否存在。
+              </p>
+              <div class="code-block mt-3 text-xs">
+                <span class="text-slate-400">// src/config/validate.ts</span><br>
+                <span class="text-purple-400">const</span> required = [<span class="text-green-400">'VITE_API_URL'</span>, <span class="text-green-400">'VITE_APP_TITLE'</span>]<br><br>
+                required.forEach(key => {<br>
+                <span class="text-slate-300">  </span><span class="text-purple-400">if</span> (!import.meta.env[key]) {<br>
+                <span class="text-slate-300">    </span><span class="text-purple-400">throw new</span> Error(<span class="text-green-400">`Missing env: ${key}`</span>)<br>
+                <span class="text-slate-300">  </span>}<br>
+                })
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice 5 -->
+        <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-green-400 text-2xl">5</span>
+            <div>
+              <div class="font-semibold text-green-300">使用统一的配置入口</div>
+              <p class="text-sm text-slate-400 mt-1">
+                创建一个配置模块，统一管理所有环境变量，避免在代码中到处使用 import.meta.env。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="bg-gradient-to-r from-purple-500/20 to-green-500/20 border border-purple-500/30 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">总结</h3>
+
+      <div class="grid md:grid-cols-4 gap-4 text-center">
+        <div>
+          <div class="text-3xl mb-2">📁</div>
+          <div class="font-semibold text-purple-300">.env 文件</div>
+          <p class="text-xs text-slate-400 mt-1">按环境命名<br/>自动加载</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🔒</div>
+          <div class="font-semibold text-green-300">VITE_ 前缀</div>
+          <p class="text-xs text-slate-400 mt-1">安全暴露<br/>防止泄露</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">⚙️</div>
+          <div class="font-semibold text-amber-300">--mode 参数</div>
+          <p class="text-xs text-slate-400 mt-1">自定义模式<br/>灵活切换</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🎯</div>
+          <div class="font-semibold text-cyan-300">import.meta.env</div>
+          <p class="text-xs text-slate-400 mt-1">代码中访问<br/>类型安全</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Reference -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">快速参考</h3>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left border-b border-slate-700">
+              <th class="pb-3 text-slate-400">命令</th>
+              <th class="pb-3 text-slate-400">模式</th>
+              <th class="pb-3 text-slate-400">加载的 .env 文件</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-300">
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3"><code class="bg-slate-700 px-2 py-0.5 rounded text-xs">vite dev</code></td>
+              <td>development</td>
+              <td>.env, .env.development</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3"><code class="bg-slate-700 px-2 py-0.5 rounded text-xs">vite build</code></td>
+              <td>production</td>
+              <td>.env, .env.production</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3"><code class="bg-slate-700 px-2 py-0.5 rounded text-xs">vite build --mode staging</code></td>
+              <td>staging</td>
+              <td>.env, .env.staging</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <div class="flex items-center gap-2 px-6 py-3 bg-green-600 rounded-lg font-semibold">
+        <span>🎉</span>
+        <span>学习完成！</span>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- End capture div -->
+
+  <!-- Page Navigation -->
+  <div class="max-w-4xl mx-auto mt-12 pt-8 border-t border-slate-700">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <a href="lsp-claude-code.html" class="flex items-center gap-2 px-5 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一篇：LSP 与 Claude Code</span>
+      </a>
+      <a href="index.html" class="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-all">
+        <span>🏠</span>
+        <span>返回首页</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center mt-12 text-slate-500 text-sm">
+    用心制作，让技术知识更易懂
+  </div>
+
+  <script>
+    const steps = ['step-0', 'step-1', 'step-2', 'step-3', 'step-4'];
+    const stepNames = ['为什么需要', '.env文件规则', '使用环境变量', '多环境实战', '最佳实践'];
+    let currentStep = 0;
+
+    function updateUI() {
+      // Hide all tabs, show current
+      steps.forEach((step, index) => {
+        const el = document.getElementById(step);
+        el.classList.toggle('active', index === currentStep);
+      });
+
+      // Update step dots
+      document.querySelectorAll('.step-dot').forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index === currentStep) {
+          dot.classList.add('active');
+        } else if (index < currentStep) {
+          dot.classList.add('completed');
+        }
+      });
+
+      // Update step labels
+      document.querySelectorAll('.step-label').forEach((label, index) => {
+        label.classList.remove('text-purple-400', 'bg-purple-500/20');
+        label.classList.add('text-slate-400');
+        if (index === currentStep) {
+          label.classList.remove('text-slate-400');
+          label.classList.add('text-purple-400', 'bg-purple-500/20');
+        }
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      updateUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Click on step dots
+    document.querySelectorAll('.step-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        goToStep(parseInt(dot.dataset.step));
+      });
+    });
+  </script>
+</body>
+</html>
