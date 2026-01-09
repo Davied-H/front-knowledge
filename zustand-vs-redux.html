@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zustand vs Redux - React 状态管理对比</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .step-dot { transition: all 0.3s ease; }
+    .step-dot.active { background-color: #8b5cf6; transform: scale(1.2); }
+    .step-dot.completed { background-color: #22c55e; }
+
+    .code-block {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+    }
+
+    .file-tab {
+      background: #334155;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #94a3b8;
+      display: inline-block;
+      margin-bottom: -1px;
+    }
+
+    .file-tab.active {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    .gradient-card {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(249, 115, 22, 0.1));
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .zustand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(249, 115, 22, 0.2);
+      color: #fb923c;
+      border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+
+    .redux-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .vs-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #f97316);
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-white p-8">
+  <div id="capture">
+  <h1 class="text-3xl font-bold text-center mb-2">Zustand vs Redux</h1>
+  <p class="text-slate-400 text-center mb-8">React 状态管理方案深度对比</p>
+
+  <!-- Step Indicator -->
+  <div class="flex justify-center items-center gap-3 mb-8">
+    <button class="step-dot active w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="0">1</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="1">2</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="2">3</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="3">4</button>
+    <div class="w-6 h-0.5 bg-slate-700"></div>
+    <button class="step-dot w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold cursor-pointer hover:opacity-80" data-step="4">5</button>
+  </div>
+
+  <!-- Step Labels -->
+  <div class="flex justify-center gap-2 mb-8 flex-wrap">
+    <span class="step-label text-purple-400 text-sm px-3 py-1 bg-purple-500/20 rounded-full" data-step="0">为什么需要</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="1">Redux 方案</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="2">Zustand 方案</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="3">深度对比</span>
+    <span class="step-label text-slate-400 text-sm px-3 py-1" data-step="4">如何选择</span>
+  </div>
+
+  <!-- Step 0: Why We Need State Management -->
+  <div id="step-0" class="tab-content active max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-4xl">🤔</span>
+        <div>
+          <h2 class="text-xl font-semibold text-purple-400">为什么需要状态管理？</h2>
+          <p class="text-slate-400 text-sm">React 原生状态的局限性</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 rounded-lg p-4 mb-4">
+        <p class="text-slate-300 leading-relaxed">
+          在 React 中，<strong class="text-purple-300">状态（State）</strong>是驱动 UI 的核心。
+          但随着应用复杂度增加，原生的 <code class="bg-slate-700 px-2 py-0.5 rounded">useState</code> 和 <code class="bg-slate-700 px-2 py-0.5 rounded">useContext</code> 会遇到问题。
+        </p>
+      </div>
+
+      <!-- Pain Points -->
+      <div class="grid md:grid-cols-2 gap-4 mt-6">
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">1</span>
+            <div>
+              <div class="font-semibold text-red-300">Prop Drilling（属性透传）</div>
+              <p class="text-sm text-slate-400 mt-1">
+                状态需要层层传递，组件嵌套深时代码冗余
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">2</span>
+            <div>
+              <div class="font-semibold text-red-300">Context 性能问题</div>
+              <p class="text-sm text-slate-400 mt-1">
+                Context 值变化会导致所有消费者重新渲染
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">3</span>
+            <div>
+              <div class="font-semibold text-red-300">状态分散</div>
+              <p class="text-sm text-slate-400 mt-1">
+                全局状态分布在各组件中，难以管理和调试
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-red-400 text-xl">4</span>
+            <div>
+              <div class="font-semibold text-red-300">缺乏 DevTools</div>
+              <p class="text-sm text-slate-400 mt-1">
+                原生方案没有时间旅行、状态追踪等调试工具
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prop Drilling Example -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-amber-400">Prop Drilling 问题示例</h3>
+
+      <div class="file-tab active">层层传递的噩梦</div>
+      <div class="code-block rounded-t-none">
+        <span class="text-slate-400">// 用户信息需要从顶层传到最深层</span><br>
+        <span class="text-purple-400">function</span> <span class="text-cyan-400">App</span>() {<br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">const</span> [user, setUser] = useState(null)<br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">return</span> &lt;<span class="text-green-400">Layout</span> <span class="text-cyan-400">user</span>={user} /&gt;  <span class="text-slate-500">// 第 1 层</span><br>
+        }<br><br>
+        <span class="text-purple-400">function</span> <span class="text-cyan-400">Layout</span>({ user }) {<br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">return</span> &lt;<span class="text-green-400">Sidebar</span> <span class="text-cyan-400">user</span>={user} /&gt;  <span class="text-slate-500">// 第 2 层</span><br>
+        }<br><br>
+        <span class="text-purple-400">function</span> <span class="text-cyan-400">Sidebar</span>({ user }) {<br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">return</span> &lt;<span class="text-green-400">UserMenu</span> <span class="text-cyan-400">user</span>={user} /&gt;  <span class="text-slate-500">// 第 3 层</span><br>
+        }<br><br>
+        <span class="text-purple-400">function</span> <span class="text-cyan-400">UserMenu</span>({ user }) {<br>
+        <span class="text-slate-300">  </span><span class="text-purple-400">return</span> &lt;<span class="text-green-400">Avatar</span> <span class="text-cyan-400">user</span>={user} /&gt;  <span class="text-slate-500">// 第 4 层...终于用到了！</span><br>
+        }
+      </div>
+    </div>
+
+    <!-- Solutions -->
+    <div class="gradient-card rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">状态管理库的解决方案</h3>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-slate-800 rounded-lg p-4 text-center">
+          <span class="redux-badge mb-3">Redux</span>
+          <div class="text-sm text-slate-400 mt-2">
+            <p class="font-semibold text-purple-300">传统老牌方案</p>
+            <p class="mt-1">2015 年诞生，生态成熟</p>
+            <p>单向数据流，可预测状态</p>
+          </div>
+        </div>
+        <div class="bg-slate-800 rounded-lg p-4 text-center">
+          <span class="zustand-badge mb-3">Zustand</span>
+          <div class="text-sm text-slate-400 mt-2">
+            <p class="font-semibold text-orange-300">新一代轻量方案</p>
+            <p class="mt-1">2019 年诞生，简洁高效</p>
+            <p>极简 API，零样板代码</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-purple-500/20 border border-purple-500/50 rounded-lg p-4 mt-4">
+        <p class="text-sm text-purple-300 text-center">
+          <strong>接下来我们将深入对比这两个方案</strong>，帮你选择最适合的工具！
+        </p>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <div></div>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：Redux 方案</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 1: Redux -->
+  <div id="step-1" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-4xl">🏛️</span>
+        <div>
+          <h2 class="text-xl font-semibold text-purple-400">Redux：传统状态管理方案</h2>
+          <p class="text-slate-400 text-sm">Facebook 出品，Flux 架构的实现</p>
+        </div>
+      </div>
+
+      <!-- Core Concepts -->
+      <div class="bg-slate-900 rounded-lg p-4 mb-6">
+        <h3 class="font-semibold text-purple-300 mb-3">Redux 三大核心概念</h3>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-slate-800 rounded-lg p-3 text-center">
+            <div class="text-2xl mb-2">📦</div>
+            <div class="font-semibold text-cyan-300">Store</div>
+            <p class="text-xs text-slate-400 mt-1">全局状态容器<br/>单一数据源</p>
+          </div>
+          <div class="bg-slate-800 rounded-lg p-3 text-center">
+            <div class="text-2xl mb-2">🎬</div>
+            <div class="font-semibold text-amber-300">Action</div>
+            <p class="text-xs text-slate-400 mt-1">描述发生了什么<br/>{ type, payload }</p>
+          </div>
+          <div class="bg-slate-800 rounded-lg p-3 text-center">
+            <div class="text-2xl mb-2">⚙️</div>
+            <div class="font-semibold text-green-300">Reducer</div>
+            <p class="text-xs text-slate-400 mt-1">纯函数处理状态<br/>(state, action) => newState</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Redux Flow -->
+      <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6">
+        <h3 class="font-semibold text-purple-300 mb-3">Redux 数据流</h3>
+        <div class="flex flex-wrap items-center justify-center gap-3 text-sm">
+          <span class="bg-slate-700 px-3 py-2 rounded">UI 触发事件</span>
+          <span class="text-purple-400">→</span>
+          <span class="bg-amber-600/30 px-3 py-2 rounded text-amber-300">dispatch(action)</span>
+          <span class="text-purple-400">→</span>
+          <span class="bg-green-600/30 px-3 py-2 rounded text-green-300">Reducer 处理</span>
+          <span class="text-purple-400">→</span>
+          <span class="bg-cyan-600/30 px-3 py-2 rounded text-cyan-300">更新 Store</span>
+          <span class="text-purple-400">→</span>
+          <span class="bg-slate-700 px-3 py-2 rounded">UI 重新渲染</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Redux Code Example -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-purple-400">Redux Toolkit 实战示例（计数器）</h3>
+
+      <!-- Step 1: Create Slice -->
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs">1</span>
+          创建 Slice（状态切片）
+        </h4>
+        <div class="file-tab active">store/counterSlice.ts</div>
+        <div class="code-block rounded-t-none text-sm">
+          <span class="text-purple-400">import</span> { createSlice } <span class="text-purple-400">from</span> <span class="text-green-400">'@reduxjs/toolkit'</span><br><br>
+          <span class="text-purple-400">const</span> counterSlice = <span class="text-cyan-400">createSlice</span>({<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">name</span>: <span class="text-green-400">'counter'</span>,<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">initialState</span>: { <span class="text-cyan-400">value</span>: <span class="text-amber-300">0</span> },<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">reducers</span>: {<br>
+          <span class="text-slate-300">    </span><span class="text-cyan-400">increment</span>: (state) => { state.value += <span class="text-amber-300">1</span> },<br>
+          <span class="text-slate-300">    </span><span class="text-cyan-400">decrement</span>: (state) => { state.value -= <span class="text-amber-300">1</span> },<br>
+          <span class="text-slate-300">    </span><span class="text-cyan-400">incrementByAmount</span>: (state, action) => {<br>
+          <span class="text-slate-300">      </span>state.value += action.payload<br>
+          <span class="text-slate-300">    </span>}<br>
+          <span class="text-slate-300">  </span>}<br>
+          })<br><br>
+          <span class="text-purple-400">export const</span> { increment, decrement, incrementByAmount } = counterSlice.actions<br>
+          <span class="text-purple-400">export default</span> counterSlice.reducer
+        </div>
+      </div>
+
+      <!-- Step 2: Configure Store -->
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs">2</span>
+          配置 Store
+        </h4>
+        <div class="file-tab active">store/index.ts</div>
+        <div class="code-block rounded-t-none text-sm">
+          <span class="text-purple-400">import</span> { configureStore } <span class="text-purple-400">from</span> <span class="text-green-400">'@reduxjs/toolkit'</span><br>
+          <span class="text-purple-400">import</span> counterReducer <span class="text-purple-400">from</span> <span class="text-green-400">'./counterSlice'</span><br><br>
+          <span class="text-purple-400">export const</span> store = <span class="text-cyan-400">configureStore</span>({<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">reducer</span>: {<br>
+          <span class="text-slate-300">    </span><span class="text-cyan-400">counter</span>: counterReducer<br>
+          <span class="text-slate-300">  </span>}<br>
+          })<br><br>
+          <span class="text-purple-400">export type</span> RootState = <span class="text-cyan-400">ReturnType</span>&lt;<span class="text-purple-400">typeof</span> store.getState&gt;<br>
+          <span class="text-purple-400">export type</span> AppDispatch = <span class="text-purple-400">typeof</span> store.dispatch
+        </div>
+      </div>
+
+      <!-- Step 3: Provider -->
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs">3</span>
+          包裹 Provider
+        </h4>
+        <div class="file-tab active">main.tsx</div>
+        <div class="code-block rounded-t-none text-sm">
+          <span class="text-purple-400">import</span> { Provider } <span class="text-purple-400">from</span> <span class="text-green-400">'react-redux'</span><br>
+          <span class="text-purple-400">import</span> { store } <span class="text-purple-400">from</span> <span class="text-green-400">'./store'</span><br><br>
+          <span class="text-cyan-400">ReactDOM</span>.createRoot(document.getElementById(<span class="text-green-400">'root'</span>)).render(<br>
+          <span class="text-slate-300">  </span>&lt;<span class="text-green-400">Provider</span> <span class="text-cyan-400">store</span>={store}&gt;<br>
+          <span class="text-slate-300">    </span>&lt;<span class="text-green-400">App</span> /&gt;<br>
+          <span class="text-slate-300">  </span>&lt;/<span class="text-green-400">Provider</span>&gt;<br>
+          )
+        </div>
+      </div>
+
+      <!-- Step 4: Use in Component -->
+      <div>
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs">4</span>
+          在组件中使用
+        </h4>
+        <div class="file-tab active">Counter.tsx</div>
+        <div class="code-block rounded-t-none text-sm">
+          <span class="text-purple-400">import</span> { useSelector, useDispatch } <span class="text-purple-400">from</span> <span class="text-green-400">'react-redux'</span><br>
+          <span class="text-purple-400">import</span> { increment, decrement } <span class="text-purple-400">from</span> <span class="text-green-400">'./store/counterSlice'</span><br><br>
+          <span class="text-purple-400">function</span> <span class="text-cyan-400">Counter</span>() {<br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">const</span> count = <span class="text-cyan-400">useSelector</span>(state => state.counter.value)<br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">const</span> dispatch = <span class="text-cyan-400">useDispatch</span>()<br><br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">return</span> (<br>
+          <span class="text-slate-300">    </span>&lt;div&gt;<br>
+          <span class="text-slate-300">      </span>&lt;span&gt;{count}&lt;/span&gt;<br>
+          <span class="text-slate-300">      </span>&lt;button <span class="text-cyan-400">onClick</span>={() => dispatch(<span class="text-amber-300">increment()</span>)}&gt;+&lt;/button&gt;<br>
+          <span class="text-slate-300">      </span>&lt;button <span class="text-cyan-400">onClick</span>={() => dispatch(<span class="text-amber-300">decrement()</span>)}&gt;-&lt;/button&gt;<br>
+          <span class="text-slate-300">    </span>&lt;/div&gt;<br>
+          <span class="text-slate-300">  </span>)<br>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Redux Pros & Cons -->
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-green-400 mb-3">Redux 优点</h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>生态成熟，社区庞大，资料丰富</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>Redux DevTools 强大的调试能力</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>状态可预测，便于测试</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>中间件机制灵活（thunk、saga）</span>
+          </li>
+        </ul>
+      </div>
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-red-400 mb-3">Redux 缺点</h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>样板代码多（action、reducer、type）</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>学习曲线陡峭</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>配置复杂，需要多个文件</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>包体积较大（约 10KB+）</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：Zustand 方案</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Zustand -->
+  <div id="step-2" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-4xl">🐻</span>
+        <div>
+          <h2 class="text-xl font-semibold text-orange-400">Zustand：新一代轻量状态管理</h2>
+          <p class="text-slate-400 text-sm">德语"状态"，发音类似"zoo-shtahnd"</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 rounded-lg p-4 mb-4">
+        <p class="text-slate-300 leading-relaxed">
+          <strong class="text-orange-300">Zustand</strong> 是一个极简的状态管理库，
+          由 Jotai、React Spring 的作者开发。它的设计理念是：
+          <strong class="text-green-400">用最少的代码实现最强大的功能</strong>。
+        </p>
+      </div>
+
+      <!-- Key Features -->
+      <div class="grid md:grid-cols-4 gap-3 mt-6">
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-2">🪶</div>
+          <div class="font-semibold text-orange-300 text-sm">超轻量</div>
+          <p class="text-xs text-slate-500 mt-1">仅 1KB 大小</p>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-2">0️⃣</div>
+          <div class="font-semibold text-green-300 text-sm">零样板</div>
+          <p class="text-xs text-slate-500 mt-1">无需 action/reducer</p>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-2">🚫</div>
+          <div class="font-semibold text-cyan-300 text-sm">无 Provider</div>
+          <p class="text-xs text-slate-500 mt-1">不需要包裹组件</p>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-3 text-center">
+          <div class="text-2xl mb-2">⚡</div>
+          <div class="font-semibold text-purple-300 text-sm">自动优化</div>
+          <p class="text-xs text-slate-500 mt-1">精准渲染更新</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zustand Code Example -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-orange-400">Zustand 实战示例（同样的计数器）</h3>
+
+      <!-- Just One File! -->
+      <div class="bg-amber-500/20 border border-amber-500/50 rounded-lg p-3 mb-4">
+        <p class="text-sm text-amber-300 text-center">
+          <strong>只需一个文件！</strong>对比 Redux 的 4 个步骤，Zustand 简洁得多
+        </p>
+      </div>
+
+      <!-- Step 1: Create Store -->
+      <div class="mb-6">
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center text-xs">1</span>
+          创建 Store（一步完成！）
+        </h4>
+        <div class="file-tab active">store/useCounterStore.ts</div>
+        <div class="code-block rounded-t-none">
+          <span class="text-purple-400">import</span> { create } <span class="text-purple-400">from</span> <span class="text-green-400">'zustand'</span><br><br>
+          <span class="text-purple-400">interface</span> <span class="text-green-400">CounterState</span> {<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">count</span>: <span class="text-green-400">number</span><br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">increment</span>: () => <span class="text-green-400">void</span><br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">decrement</span>: () => <span class="text-green-400">void</span><br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">incrementBy</span>: (amount: <span class="text-green-400">number</span>) => <span class="text-green-400">void</span><br>
+          }<br><br>
+          <span class="text-purple-400">export const</span> useCounterStore = <span class="text-cyan-400">create</span>&lt;CounterState&gt;((set) => ({<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">count</span>: <span class="text-amber-300">0</span>,<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">increment</span>: () => set((state) => ({ count: state.count + <span class="text-amber-300">1</span> })),<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">decrement</span>: () => set((state) => ({ count: state.count - <span class="text-amber-300">1</span> })),<br>
+          <span class="text-slate-300">  </span><span class="text-cyan-400">incrementBy</span>: (amount) => set((state) => ({ count: state.count + amount })),<br>
+          }))
+        </div>
+      </div>
+
+      <!-- Step 2: Use in Component -->
+      <div>
+        <h4 class="text-sm font-semibold mb-2 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center text-xs">2</span>
+          在组件中使用（无需 Provider！）
+        </h4>
+        <div class="file-tab active">Counter.tsx</div>
+        <div class="code-block rounded-t-none">
+          <span class="text-purple-400">import</span> { useCounterStore } <span class="text-purple-400">from</span> <span class="text-green-400">'./store/useCounterStore'</span><br><br>
+          <span class="text-purple-400">function</span> <span class="text-cyan-400">Counter</span>() {<br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">const</span> { count, increment, decrement } = <span class="text-cyan-400">useCounterStore</span>()<br><br>
+          <span class="text-slate-300">  </span><span class="text-purple-400">return</span> (<br>
+          <span class="text-slate-300">    </span>&lt;div&gt;<br>
+          <span class="text-slate-300">      </span>&lt;span&gt;{count}&lt;/span&gt;<br>
+          <span class="text-slate-300">      </span>&lt;button <span class="text-cyan-400">onClick</span>={increment}&gt;+&lt;/button&gt;<br>
+          <span class="text-slate-300">      </span>&lt;button <span class="text-cyan-400">onClick</span>={decrement}&gt;-&lt;/button&gt;<br>
+          <span class="text-slate-300">    </span>&lt;/div&gt;<br>
+          <span class="text-slate-300">  </span>)<br>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Features -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-orange-400">Zustand 高级特性</h3>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Selector -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-cyan-300 mb-2">选择器（防止无关渲染）</h4>
+          <div class="code-block text-xs">
+            <span class="text-slate-400">// 只订阅 count，其他状态变化不会触发渲染</span><br>
+            <span class="text-purple-400">const</span> count = useCounterStore(<br>
+            <span class="text-slate-300">  </span>(state) => state.<span class="text-cyan-400">count</span><br>
+            )
+          </div>
+        </div>
+
+        <!-- Middleware -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-green-300 mb-2">中间件（持久化）</h4>
+          <div class="code-block text-xs">
+            <span class="text-purple-400">import</span> { persist } <span class="text-purple-400">from</span> <span class="text-green-400">'zustand/middleware'</span><br><br>
+            <span class="text-purple-400">const</span> useStore = create(<br>
+            <span class="text-slate-300">  </span><span class="text-cyan-400">persist</span>(<br>
+            <span class="text-slate-300">    </span>(set) => ({ ... }),<br>
+            <span class="text-slate-300">    </span>{ <span class="text-cyan-400">name</span>: <span class="text-green-400">'counter'</span> }<br>
+            <span class="text-slate-300">  </span>)<br>
+            )
+          </div>
+        </div>
+
+        <!-- DevTools -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-purple-300 mb-2">DevTools 支持</h4>
+          <div class="code-block text-xs">
+            <span class="text-purple-400">import</span> { devtools } <span class="text-purple-400">from</span> <span class="text-green-400">'zustand/middleware'</span><br><br>
+            <span class="text-purple-400">const</span> useStore = create(<br>
+            <span class="text-slate-300">  </span><span class="text-cyan-400">devtools</span>(<br>
+            <span class="text-slate-300">    </span>(set) => ({ ... }),<br>
+            <span class="text-slate-300">    </span>{ <span class="text-cyan-400">name</span>: <span class="text-green-400">'MyStore'</span> }<br>
+            <span class="text-slate-300">  </span>)<br>
+            )
+          </div>
+        </div>
+
+        <!-- Async Actions -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-amber-300 mb-2">异步操作（无需中间件）</h4>
+          <div class="code-block text-xs">
+            <span class="text-purple-400">const</span> useStore = create((set) => ({<br>
+            <span class="text-slate-300">  </span><span class="text-cyan-400">fetchUser</span>: <span class="text-purple-400">async</span> (id) => {<br>
+            <span class="text-slate-300">    </span><span class="text-purple-400">const</span> user = <span class="text-purple-400">await</span> api.getUser(id)<br>
+            <span class="text-slate-300">    </span>set({ user })<br>
+            <span class="text-slate-300">  </span>}<br>
+            }))
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zustand Pros & Cons -->
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-green-500/10 border border-green-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-green-400 mb-3">Zustand 优点</h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>极简 API，5 分钟上手</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>无样板代码，代码量减少 80%</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>无需 Provider，任意位置使用</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>原生支持异步，无需额外中间件</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-green-400">+</span>
+            <span>体积极小（约 1KB gzipped）</span>
+          </li>
+        </ul>
+      </div>
+      <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-red-400 mb-3">Zustand 缺点</h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>生态不如 Redux 成熟</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>社区资源相对较少</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>大型项目经验积累不足</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-red-400">-</span>
+            <span>DevTools 功能不如 Redux 丰富</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：深度对比</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: Comparison -->
+  <div id="step-3" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center justify-center gap-4 mb-6">
+        <span class="redux-badge text-lg px-4 py-2">Redux</span>
+        <span class="vs-divider">VS</span>
+        <span class="zustand-badge text-lg px-4 py-2">Zustand</span>
+      </div>
+
+      <p class="text-slate-300 text-center mb-6">
+        让我们从多个维度深入对比这两个状态管理方案
+      </p>
+    </div>
+
+    <!-- Code Comparison -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">代码量对比：实现同一功能</h3>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="redux-badge">Redux Toolkit</span>
+            <span class="text-red-400 text-sm">~40 行代码</span>
+          </div>
+          <div class="bg-slate-900 rounded-lg p-3 text-xs text-slate-400 h-40 overflow-hidden">
+            <p>// counterSlice.ts (20行)</p>
+            <p>// store/index.ts (10行)</p>
+            <p>// main.tsx Provider (5行)</p>
+            <p>// Counter.tsx (10行)</p>
+            <p class="mt-2 text-slate-500">需要 4 个文件协同工作</p>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="zustand-badge">Zustand</span>
+            <span class="text-green-400 text-sm">~15 行代码</span>
+          </div>
+          <div class="bg-slate-900 rounded-lg p-3 text-xs text-slate-400 h-40 overflow-hidden">
+            <p>// useCounterStore.ts (10行)</p>
+            <p>// Counter.tsx (5行)</p>
+            <p class="mt-2 text-slate-500">只需 2 个文件</p>
+            <p class="mt-4 text-green-400">代码减少 60%+</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Comparison Table -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">功能特性对比</h3>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left border-b border-slate-700">
+              <th class="pb-3 text-slate-400">特性</th>
+              <th class="pb-3 text-purple-400 text-center">Redux</th>
+              <th class="pb-3 text-orange-400 text-center">Zustand</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-300">
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">包体积 (gzipped)</td>
+              <td class="text-center text-red-300">~10KB</td>
+              <td class="text-center text-green-300">~1KB</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">学习曲线</td>
+              <td class="text-center text-red-300">陡峭</td>
+              <td class="text-center text-green-300">平缓</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">样板代码</td>
+              <td class="text-center text-red-300">较多</td>
+              <td class="text-center text-green-300">几乎没有</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">Provider 包裹</td>
+              <td class="text-center text-red-300">必需</td>
+              <td class="text-center text-green-300">不需要</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">异步处理</td>
+              <td class="text-center text-amber-300">需要中间件</td>
+              <td class="text-center text-green-300">原生支持</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">DevTools</td>
+              <td class="text-center text-green-300">功能丰富</td>
+              <td class="text-center text-amber-300">基本支持</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">生态系统</td>
+              <td class="text-center text-green-300">非常成熟</td>
+              <td class="text-center text-amber-300">快速成长</td>
+            </tr>
+            <tr class="border-b border-slate-700/50">
+              <td class="py-3">TypeScript 支持</td>
+              <td class="text-center text-green-300">优秀</td>
+              <td class="text-center text-green-300">优秀</td>
+            </tr>
+            <tr>
+              <td class="py-3">React 外使用</td>
+              <td class="text-center text-amber-300">可以但繁琐</td>
+              <td class="text-center text-green-300">简单直接</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Performance Comparison -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">性能对比</h3>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-purple-300 mb-3">Redux 渲染行为</h4>
+          <div class="code-block text-xs">
+            <span class="text-slate-400">// useSelector 自带浅比较</span><br>
+            <span class="text-slate-400">// 需要手动优化选择器</span><br>
+            <span class="text-purple-400">const</span> user = useSelector(<br>
+            <span class="text-slate-300">  </span>state => state.user,<br>
+            <span class="text-slate-300">  </span><span class="text-cyan-400">shallowEqual</span> <span class="text-slate-400">// 需要引入</span><br>
+            )
+          </div>
+        </div>
+        <div class="bg-slate-900 rounded-lg p-4">
+          <h4 class="font-semibold text-orange-300 mb-3">Zustand 渲染行为</h4>
+          <div class="code-block text-xs">
+            <span class="text-slate-400">// 默认使用严格相等 (===)</span><br>
+            <span class="text-slate-400">// 选择器精准控制渲染</span><br>
+            <span class="text-purple-400">const</span> count = useStore(<br>
+            <span class="text-slate-300">  </span>state => state.count<br>
+            ) <span class="text-slate-400">// 只在 count 变化时渲染</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mt-4">
+        <p class="text-sm text-green-300 text-center">
+          <strong>性能结论：</strong>两者性能相当，Zustand 选择器写法更简洁
+        </p>
+      </div>
+    </div>
+
+    <!-- Concept Comparison -->
+    <div class="bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-500/30 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">设计理念对比</h3>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="text-center">
+          <span class="redux-badge mb-3">Redux</span>
+          <div class="bg-slate-800 rounded-lg p-4 mt-2">
+            <p class="text-slate-300 text-sm">
+              <strong class="text-purple-300">"严格的单向数据流"</strong>
+            </p>
+            <p class="text-xs text-slate-400 mt-2">
+              强调可预测性、可调试性<br/>
+              牺牲一定开发体验换取可维护性
+            </p>
+          </div>
+        </div>
+        <div class="text-center">
+          <span class="zustand-badge mb-3">Zustand</span>
+          <div class="bg-slate-800 rounded-lg p-4 mt-2">
+            <p class="text-slate-300 text-sm">
+              <strong class="text-orange-300">"简单即正义"</strong>
+            </p>
+            <p class="text-xs text-slate-400 mt-2">
+              不强加架构约束<br/>
+              让开发者自由选择最佳实践
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <button onclick="nextStep()" class="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold transition-all group">
+        <span>下一步：如何选择</span>
+        <span class="text-xl group-hover:translate-x-1 transition-transform">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 4: How to Choose -->
+  <div id="step-4" class="tab-content max-w-4xl mx-auto">
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-4xl">🎯</span>
+        <div>
+          <h2 class="text-xl font-semibold text-purple-400">如何选择？</h2>
+          <p class="text-slate-400 text-sm">根据项目特点做出最佳选择</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision Tree -->
+    <div class="bg-slate-800 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">选择决策树</h3>
+
+      <div class="space-y-4">
+        <!-- Question 1 -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-cyan-400 text-xl">Q1</span>
+            <div class="flex-1">
+              <div class="font-semibold text-slate-200">项目规模如何？</div>
+              <div class="grid md:grid-cols-2 gap-3 mt-3">
+                <div class="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-orange-300 text-sm">小中型项目</div>
+                  <p class="text-xs text-slate-400 mt-1">推荐 <strong>Zustand</strong>：快速上手，维护简单</p>
+                </div>
+                <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-purple-300 text-sm">大型复杂项目</div>
+                  <p class="text-xs text-slate-400 mt-1">考虑 <strong>Redux</strong>：生态成熟，调试方便</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-cyan-400 text-xl">Q2</span>
+            <div class="flex-1">
+              <div class="font-semibold text-slate-200">团队经验如何？</div>
+              <div class="grid md:grid-cols-2 gap-3 mt-3">
+                <div class="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-orange-300 text-sm">新手团队 / 初创项目</div>
+                  <p class="text-xs text-slate-400 mt-1">推荐 <strong>Zustand</strong>：学习成本低</p>
+                </div>
+                <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-purple-300 text-sm">有 Redux 经验</div>
+                  <p class="text-xs text-slate-400 mt-1">可继续使用 <strong>Redux</strong>：无需迁移成本</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="bg-slate-900 rounded-lg p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-cyan-400 text-xl">Q3</span>
+            <div class="flex-1">
+              <div class="font-semibold text-slate-200">是否需要复杂调试？</div>
+              <div class="grid md:grid-cols-2 gap-3 mt-3">
+                <div class="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-orange-300 text-sm">基本调试即可</div>
+                  <p class="text-xs text-slate-400 mt-1">推荐 <strong>Zustand</strong>：DevTools 基本够用</p>
+                </div>
+                <div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <div class="font-semibold text-purple-300 text-sm">需要时间旅行等高级功能</div>
+                  <p class="text-xs text-slate-400 mt-1">推荐 <strong>Redux</strong>：调试体验最佳</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-orange-500/10 border border-orange-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-orange-400 mb-3 flex items-center gap-2">
+          <span class="text-xl">🐻</span> 选择 Zustand 如果...
+        </h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-orange-400">→</span>
+            <span>你想快速开发，减少样板代码</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-orange-400">→</span>
+            <span>项目规模小到中等</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-orange-400">→</span>
+            <span>团队是 React 新手</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-orange-400">→</span>
+            <span>追求极致的包体积</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-orange-400">→</span>
+            <span>需要在非 React 环境使用</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-5">
+        <h3 class="font-semibold text-purple-400 mb-3 flex items-center gap-2">
+          <span class="text-xl">🏛️</span> 选择 Redux 如果...
+        </h3>
+        <ul class="space-y-2 text-sm text-slate-300">
+          <li class="flex items-start gap-2">
+            <span class="text-purple-400">→</span>
+            <span>项目复杂，团队人多</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-purple-400">→</span>
+            <span>需要强大的调试工具</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-purple-400">→</span>
+            <span>团队已有 Redux 经验</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-purple-400">→</span>
+            <span>需要丰富的中间件生态</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-purple-400">→</span>
+            <span>项目需要长期维护</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="bg-gradient-to-r from-purple-500/20 to-orange-500/20 border border-purple-500/30 rounded-xl p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4 text-center">总结</h3>
+
+      <div class="grid md:grid-cols-4 gap-4 text-center">
+        <div>
+          <div class="text-3xl mb-2">🐻</div>
+          <div class="font-semibold text-orange-300">Zustand</div>
+          <p class="text-xs text-slate-400 mt-1">新时代首选<br/>简单高效</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🏛️</div>
+          <div class="font-semibold text-purple-300">Redux</div>
+          <p class="text-xs text-slate-400 mt-1">企业级方案<br/>生态成熟</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">🎯</div>
+          <div class="font-semibold text-cyan-300">选择标准</div>
+          <p class="text-xs text-slate-400 mt-1">项目规模<br/>团队经验</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-2">💡</div>
+          <div class="font-semibold text-green-300">我的建议</div>
+          <p class="text-xs text-slate-400 mt-1">新项目优先<br/>考虑 Zustand</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Start -->
+    <div class="bg-slate-800 rounded-xl p-6">
+      <h3 class="text-lg font-semibold mb-4">快速开始</h3>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="file-tab active">安装 Zustand</div>
+          <div class="code-block rounded-t-none">
+            npm install <span class="text-cyan-400">zustand</span><br>
+            <span class="text-slate-400"># 或</span><br>
+            pnpm add <span class="text-cyan-400">zustand</span>
+          </div>
+        </div>
+        <div>
+          <div class="file-tab active">安装 Redux Toolkit</div>
+          <div class="code-block rounded-t-none">
+            npm install <span class="text-purple-400">@reduxjs/toolkit react-redux</span><br>
+            <span class="text-slate-400"># 或</span><br>
+            pnpm add <span class="text-purple-400">@reduxjs/toolkit react-redux</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step Navigation -->
+    <div class="flex justify-between items-center mt-8">
+      <button onclick="prevStep()" class="flex items-center gap-2 px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一步</span>
+      </button>
+      <div class="flex items-center gap-2 px-6 py-3 bg-green-600 rounded-lg font-semibold">
+        <span>🎉</span>
+        <span>学习完成！</span>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- End capture div -->
+
+  <!-- Page Navigation -->
+  <div class="max-w-4xl mx-auto mt-12 pt-8 border-t border-slate-700">
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+      <a href="vite-env-config.html" class="flex items-center gap-2 px-5 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all group">
+        <span class="text-xl group-hover:-translate-x-1 transition-transform">←</span>
+        <span>上一篇：Vite 多环境配置</span>
+      </a>
+      <a href="index.html" class="flex items-center gap-2 px-5 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg transition-all">
+        <span>🏠</span>
+        <span>返回首页</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center mt-12 text-slate-500 text-sm">
+    用心制作，让技术知识更易懂
+  </div>
+
+  <script>
+    const steps = ['step-0', 'step-1', 'step-2', 'step-3', 'step-4'];
+    const stepNames = ['为什么需要', 'Redux方案', 'Zustand方案', '深度对比', '如何选择'];
+    let currentStep = 0;
+
+    function updateUI() {
+      // Hide all tabs, show current
+      steps.forEach((step, index) => {
+        const el = document.getElementById(step);
+        el.classList.toggle('active', index === currentStep);
+      });
+
+      // Update step dots
+      document.querySelectorAll('.step-dot').forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index === currentStep) {
+          dot.classList.add('active');
+        } else if (index < currentStep) {
+          dot.classList.add('completed');
+        }
+      });
+
+      // Update step labels
+      document.querySelectorAll('.step-label').forEach((label, index) => {
+        label.classList.remove('text-purple-400', 'bg-purple-500/20');
+        label.classList.add('text-slate-400');
+        if (index === currentStep) {
+          label.classList.remove('text-slate-400');
+          label.classList.add('text-purple-400', 'bg-purple-500/20');
+        }
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function goToStep(step) {
+      currentStep = step;
+      updateUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Click on step dots
+    document.querySelectorAll('.step-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        goToStep(parseInt(dot.dataset.step));
+      });
+    });
+  </script>
+</body>
+</html>
